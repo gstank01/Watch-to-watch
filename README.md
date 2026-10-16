@@ -35,6 +35,8 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - About page with TMDB and JustWatch attribution and a plain-English privacy summary.
 - Typed, zod-validated TMDB client with caching and retry/backoff on 429.
 - `data/free-services.yaml`, schema-validated at build time.
+- "Watch on …" buttons go straight to each service (its own search for the title, or its home
+  page) using `data/provider-links.yaml`; TMDB's page is only a fallback.
 
 ## Getting started
 
@@ -100,7 +102,8 @@ The data files reject regions that aren't in `SUPPORTED_REGIONS`.
 
 ## Updating curated data
 
-`data/free-services.yaml` lists providers that are free in each region. See
+`data/free-services.yaml` lists providers that are free in each region, and
+`data/provider-links.yaml` says where each service's "Watch on …" button goes. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose changes. Before launch, run
 `npm run verify-providers` with a real token to confirm every provider id.
 

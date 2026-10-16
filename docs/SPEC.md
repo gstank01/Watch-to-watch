@@ -47,7 +47,7 @@ This spec is written for an AI coding agent (Claude Code) to build the project i
    3. **Free trial available** (subscription services with an active trial in `data/trials.yaml`)
    4. **Other subscriptions**
    5. **Rent / buy** (collapsed by default)
-4. Each provider row has a "Watch on X" button linking to the provider (TMDB's JustWatch link for that title/region).
+4. Each provider row has a "Watch on X" button linking straight to the provider: its own search for the title, or its home page, from `data/provider-links.yaml`. TMDB's page for the title is only the fallback for providers not in that file. *(Changed at the owner's request: originally TMDB's JustWatch link, which sent users through TMDB first.)*
 
 ### Flow B: Browse
 1. User opens Browse and picks filters: mood/genre, film or series, max runtime, "my services only", "free only", sort (popular / top rated / newest).

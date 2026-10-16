@@ -23,6 +23,8 @@ export const PROVIDERS = {
   amazonVideo: p(10, "Amazon Video", 21),
   googlePlay: p(3, "Google Play Movies", 22),
   hulu: p(15, "Hulu", 1),
+  // Deliberately absent from data/provider-links.yaml.
+  rakuten: p(35, "Rakuten TV", 23),
 };
 
 export const THE_BEAR_TV = {
@@ -79,7 +81,7 @@ export const WATCH_PROVIDERS: Record<string, unknown> = {
       GB: {
         link: "https://www.themoviedb.org/tv/136315-the-bear/watch?locale=GB",
         flatrate: [PROVIDERS.disney],
-        buy: [PROVIDERS.appleStore, PROVIDERS.amazonVideo, PROVIDERS.googlePlay],
+        buy: [PROVIDERS.appleStore, PROVIDERS.amazonVideo, PROVIDERS.googlePlay, PROVIDERS.rakuten],
       },
       BG: {
         link: "https://www.themoviedb.org/tv/136315-the-bear/watch?locale=BG",
@@ -104,7 +106,7 @@ export const WATCH_PROVIDERS: Record<string, unknown> = {
       // No BBC iPlayer outside the UK.
       BG: {
         link: "https://www.themoviedb.org/movie/116149-paddington/watch?locale=BG",
-        flatrate: [PROVIDERS.netflix],
+        flatrate: [PROVIDERS.netflix, PROVIDERS.prime],
       },
     },
   },

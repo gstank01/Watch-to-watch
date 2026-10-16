@@ -20,7 +20,7 @@ describe("groupProviders", () => {
     expect(groups.map((g) => g.label)).toEqual(["Other subscriptions", "Rent / buy"]);
     expect(summary(groups)).toEqual({
       subscription: ["Disney Plus"],
-      rentBuy: ["Apple TV", "Amazon Video", "Google Play Movies"],
+      rentBuy: ["Apple TV", "Amazon Video", "Google Play Movies", "Rakuten TV"],
     });
   });
 
@@ -33,7 +33,7 @@ describe("groupProviders", () => {
     expect(groups[0]).toMatchObject({ key: "mine", label: "On your services" });
     expect(summary(groups)).toEqual({
       mine: ["Disney Plus"],
-      rentBuy: ["Apple TV", "Amazon Video", "Google Play Movies"],
+      rentBuy: ["Apple TV", "Amazon Video", "Google Play Movies", "Rakuten TV"],
     });
   });
 

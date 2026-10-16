@@ -1,10 +1,12 @@
 /**
- * Checks that every provider id in the curated data files exists in TMDB for
- * its region and that the name still matches. Needs TMDB_API_TOKEN.
+ * Checks that every provider id in the curated data files exists in TMDB and
+ * that the name still matches. Region-less entries (provider-links.yaml) are
+ * checked against every supported region. Needs TMDB_API_TOKEN.
  *
  *   TMDB_API_TOKEN=... npm run verify-providers
  */
-import { loadFreeServicesFile } from "../lib/data/load";
+import { loadFreeServicesFile, loadProviderLinksFile } from "../lib/data/load";
+import { SUPPORTED_REGION_CODES } from "../lib/region-shared";
 
 const token = process.env.TMDB_API_TOKEN;
 if (!token) {
@@ -28,26 +30,30 @@ async function providersFor(region: string) {
   return names;
 }
 
+type Entry = { provider_id: number; provider_name: string; region?: string };
+
 async function main() {
-  const entries = loadFreeServicesFile();
-  const regions = [...new Set(entries.map((e) => e.region))];
+  const live = new Map<string, Map<number, string>>();
+  for (const region of SUPPORTED_REGION_CODES) live.set(region, await providersFor(region));
+
   let problems = 0;
-  for (const region of regions) {
-    const live = await providersFor(region);
-    for (const e of entries.filter((x) => x.region === region)) {
-      const name = live.get(e.provider_id);
-      if (!name) {
+  const check = (file: string, entries: Entry[]) => {
+    for (const e of entries) {
+      const regions = e.region ? [e.region] : SUPPORTED_REGION_CODES;
+      const where = `${file} ${e.region ?? "all"} ${e.provider_id} (${e.provider_name})`;
+      const names = regions.map((r) => live.get(r)?.get(e.provider_id)).filter(Boolean);
+      if (names.length === 0) {
         problems++;
-        console.log(`✗ ${region} ${e.provider_id} (${e.provider_name}): not listed by TMDB`);
-      } else if (name !== e.provider_name) {
-        console.log(
-          `! ${region} ${e.provider_id}: TMDB calls it "${name}", file says "${e.provider_name}"`,
-        );
+        console.log(`✗ ${where}: not listed by TMDB in ${regions.join("/")}`);
+      } else if (!names.includes(e.provider_name)) {
+        console.log(`! ${where}: TMDB calls it "${names[0]}"`);
       } else {
-        console.log(`✓ ${region} ${e.provider_id} ${name}`);
+        console.log(`✓ ${where}`);
       }
     }
-  }
+  };
+  check("free-services.yaml", loadFreeServicesFile());
+  check("provider-links.yaml", loadProviderLinksFile());
   process.exit(problems ? 1 : 0);
 }
 

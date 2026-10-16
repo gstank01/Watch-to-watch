@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const MOCK_PORT = Number(process.env.MOCK_TMDB_PORT ?? 4010);
+// Next.js keeps fetched responses in .next/cache between runs. A per-run path
+// (the mock answers under any prefix) keeps one run's cached mock data out of the next.
+const MOCK_TMDB_URL = `http://localhost:${MOCK_PORT}/run-${Date.now()}/3`;
 export const UNCONFIGURED_PORT = PORT + 1;
 
 /**
@@ -49,7 +52,7 @@ export default defineConfig({
       port: PORT,
       env: {
         TMDB_API_TOKEN: "e2e-token",
-        TMDB_API_BASE_URL: `http://localhost:${MOCK_PORT}/3`,
+        TMDB_API_BASE_URL: MOCK_TMDB_URL,
         DEFAULT_REGION: "GB",
       },
       reuseExistingServer: !process.env.CI,
@@ -58,7 +61,7 @@ export default defineConfig({
       // Misconfigured on purpose (no TMDB token) for tests/e2e/setup-problems.spec.ts.
       command: `npx next start -p ${UNCONFIGURED_PORT}`,
       port: UNCONFIGURED_PORT,
-      env: { TMDB_API_TOKEN: "", TMDB_API_BASE_URL: `http://localhost:${MOCK_PORT}/3` },
+      env: { TMDB_API_TOKEN: "", TMDB_API_BASE_URL: MOCK_TMDB_URL },
       reuseExistingServer: !process.env.CI,
     },
   ],

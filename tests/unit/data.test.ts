@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { loadFreeServicesFile, parseDataFile } from "@/lib/data/load";
-import { freeServicesFileSchema } from "@/lib/data/schemas";
+import { loadFreeServicesFile, loadProviderLinksFile, parseDataFile } from "@/lib/data/load";
+import { freeServicesFileSchema, providerLinksFileSchema } from "@/lib/data/schemas";
 
 describe("free-services.yaml", () => {
   it("the committed file is valid and includes the main UK free services", () => {
@@ -32,5 +32,34 @@ describe("free-services.yaml", () => {
     expect(() => parseDataFile("- [unclosed", freeServicesFileSchema, "bad.yaml")).toThrow(
       /invalid YAML/,
     );
+  });
+});
+
+describe("provider-links.yaml", () => {
+  const parse = (yaml: string) => parseDataFile(yaml, providerLinksFileSchema, "links.yaml");
+
+  it("the committed file is valid", () => {
+    expect(loadProviderLinksFile().length).toBeGreaterThan(0);
+  });
+
+  it("requires https links", () => {
+    expect(() =>
+      parse(`- {provider_id: 8, provider_name: N, home_url: "http://n.com/"}\n`),
+    ).toThrow(/https/);
+  });
+
+  it("requires {query} in search links", () => {
+    expect(() =>
+      parse(
+        `- {provider_id: 8, provider_name: N, home_url: "https://n.com/", search_url: "https://n.com/search"}\n`,
+      ),
+    ).toThrow(/\{query\}/);
+  });
+
+  it("rejects duplicates for the same region, but allows a regional override", () => {
+    const base = `- {provider_id: 9, provider_name: P, home_url: "https://p.com/"}\n`;
+    const gb = `- {provider_id: 9, provider_name: P, region: GB, home_url: "https://p.co.uk/"}\n`;
+    expect(parse(base + gb)).toHaveLength(2);
+    expect(() => parse(base + base)).toThrow(/Duplicate/);
   });
 });

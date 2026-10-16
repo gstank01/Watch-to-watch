@@ -31,13 +31,53 @@ test.describe("Flow A: search → where to watch", () => {
     const rentBuy = group(page, "rentBuy");
     await expect(rentBuy).not.toHaveAttribute("open");
     await expect(rentBuy.getByText("Apple TV", { exact: true })).toBeHidden();
-    await rentBuy.getByText("Rent / buy (3)").click();
+    await rentBuy.getByText("Rent / buy (4)").click();
     await expect(rentBuy.getByText("Apple TV", { exact: true })).toBeVisible();
-
-    const watch = group(page, "subscription").getByRole("link", { name: /Watch on Disney Plus/ });
-    await expect(watch).toHaveAttribute("href", /themoviedb\.org\/tv\/136315.*locale=GB/);
-    await expect(watch).toHaveAttribute("target", "_blank");
     await expect(page.getByText(/Availability from\s+JustWatch/)).toBeVisible();
+  });
+
+  test("buttons go straight to the service, not via TMDB", async ({ page }) => {
+    await page.goto("/tv/136315");
+    const button = (name: RegExp) => page.locator("[data-group]").getByRole("link", { name });
+
+    // A known search link: the service's own search for the title.
+    await page.getByText("Rent / buy (4)").click();
+    await expect(button(/^Watch on Apple TV/)).toHaveAttribute(
+      "href",
+      "https://tv.apple.com/search?term=The%20Bear",
+    );
+    await expect(button(/^Watch on Google Play Movies/)).toHaveAttribute(
+      "href",
+      "https://play.google.com/store/search?q=The%20Bear&c=movies",
+    );
+    // No search link known: the service's home page, labelled honestly.
+    const disney = button(/^Open Disney Plus/);
+    await expect(disney).toHaveAttribute("href", "https://www.disneyplus.com/");
+    await expect(disney).toHaveAttribute("target", "_blank");
+    // Not in provider-links.yaml at all: TMDB's page is the only option.
+    await expect(button(/^Find on TMDB/)).toHaveAttribute(
+      "href",
+      /themoviedb\.org\/tv\/136315.*locale=GB/,
+    );
+    await expect(page.getByRole("link", { name: /See this title on TMDB/ })).toBeVisible();
+  });
+
+  test("links follow the country", async ({ page }) => {
+    await page.goto("/movie/116149");
+    await expect(page.getByRole("link", { name: /^Watch on BBC iPlayer/ })).toHaveAttribute(
+      "href",
+      "https://www.bbc.co.uk/iplayer/search?q=Paddington",
+    );
+    await page.getByLabel("Country").selectOption("BG");
+    await expect(page.getByRole("heading", { name: "Where to watch in Bulgaria" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Open Amazon Prime Video/ })).toHaveAttribute(
+      "href",
+      "https://www.primevideo.com/",
+    );
+    await expect(page.getByRole("link", { name: /^Watch on Netflix/ })).toHaveAttribute(
+      "href",
+      "https://www.netflix.com/search?q=Paddington",
+    );
   });
 
   test("pressing Enter shows full search results", async ({ page }) => {

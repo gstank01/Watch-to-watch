@@ -1,0 +1,105 @@
+# Where each "Watch on …" button goes.
+#
+# TMDB doesn't give a link to a title on each service, so we send people
+# straight to the service: to its own search for the title (`search_url`,
+# where {query} becomes the title), or to its home page (`home_url`) when we
+# don't have a search link we've checked works.
+#
+# - Leave out `region` for a link that works everywhere; add an entry with
+#   `region` to override it for one country.
+# - Only add a `search_url` after opening it in a browser (with a real title in
+#   place of {query}) and seeing that service's search results.
+# - No affiliate or tracking parameters, ever.
+# - Services not listed here fall back to the title's page on TMDB.
+#
+# provider_id is the TMDB watch-provider id; `npm run verify-providers` checks them.
+
+- provider_id: 8
+  provider_name: Netflix
+  home_url: https://www.netflix.com/
+  search_url: https://www.netflix.com/search?q={query}
+
+- provider_id: 9
+  provider_name: Amazon Prime Video
+  home_url: https://www.primevideo.com/
+- provider_id: 9
+  provider_name: Amazon Prime Video
+  region: GB
+  home_url: https://www.amazon.co.uk/gp/video/storefront
+  search_url: https://www.amazon.co.uk/s?k={query}&i=instant-video
+
+- provider_id: 10
+  provider_name: Amazon Video
+  region: GB
+  home_url: https://www.amazon.co.uk/gp/video/storefront
+  search_url: https://www.amazon.co.uk/s?k={query}&i=instant-video
+
+- provider_id: 337
+  provider_name: Disney Plus
+  home_url: https://www.disneyplus.com/
+
+- provider_id: 350
+  provider_name: Apple TV Plus
+  home_url: https://tv.apple.com/
+  search_url: https://tv.apple.com/search?term={query}
+
+- provider_id: 2
+  provider_name: Apple TV
+  home_url: https://tv.apple.com/
+  search_url: https://tv.apple.com/search?term={query}
+
+- provider_id: 3
+  provider_name: Google Play Movies
+  home_url: https://play.google.com/store/movies
+  search_url: https://play.google.com/store/search?q={query}&c=movies
+
+- provider_id: 192
+  provider_name: YouTube
+  home_url: https://www.youtube.com/
+  search_url: https://www.youtube.com/results?search_query={query}
+
+- provider_id: 38
+  provider_name: BBC iPlayer
+  region: GB
+  home_url: https://www.bbc.co.uk/iplayer
+  search_url: https://www.bbc.co.uk/iplayer/search?q={query}
+
+- provider_id: 41
+  provider_name: ITVX
+  region: GB
+  home_url: https://www.itv.com/watch
+
+- provider_id: 103
+  provider_name: Channel 4
+  region: GB
+  home_url: https://www.channel4.com/
+
+- provider_id: 333
+  provider_name: My5
+  region: GB
+  home_url: https://www.channel5.com/
+
+- provider_id: 39
+  provider_name: Now TV
+  region: GB
+  home_url: https://www.nowtv.com/
+
+- provider_id: 11
+  provider_name: MUBI
+  home_url: https://mubi.com/
+
+- provider_id: 531
+  provider_name: Paramount Plus
+  home_url: https://www.paramountplus.com/
+
+- provider_id: 300
+  provider_name: Pluto TV
+  home_url: https://pluto.tv/
+
+- provider_id: 538
+  provider_name: Plex
+  home_url: https://watch.plex.tv/
+
+- provider_id: 73
+  provider_name: Tubi TV
+  home_url: https://tubitv.com/

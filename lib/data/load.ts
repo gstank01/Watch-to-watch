@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import type { z } from "zod";
-import { freeServicesFileSchema } from "./schemas";
+import { freeServicesFileSchema, providerLinksFileSchema } from "./schemas";
 
 /** Parses and validates a YAML data file. Throws a readable error on invalid data. */
 export function parseDataFile<T extends z.ZodType>(source: string, schema: T, label: string) {
@@ -25,4 +25,9 @@ export function parseDataFile<T extends z.ZodType>(source: string, schema: T, la
 export function loadFreeServicesFile() {
   const source = readFileSync(path.join(process.cwd(), "data", "free-services.yaml"), "utf8");
   return parseDataFile(source, freeServicesFileSchema, "free-services.yaml");
+}
+
+export function loadProviderLinksFile() {
+  const source = readFileSync(path.join(process.cwd(), "data", "provider-links.yaml"), "utf8");
+  return parseDataFile(source, providerLinksFileSchema, "provider-links.yaml");
 }

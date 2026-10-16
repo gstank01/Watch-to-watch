@@ -10,6 +10,10 @@ Some facts have no reliable API, so they live in `data/` as reviewed YAML:
 - `data/free-services.yaml`: providers that are free to watch in a region
   (BBC iPlayer, ITVX, Channel 4 …). TMDB often lists these as subscriptions;
   this file makes the app show them as **Free**.
+- `data/provider-links.yaml`: where each "Watch on …" button goes, the service's own search
+  for the title (`search_url` with `{query}`) or its home page. Only add a `search_url` after
+  opening it in a browser with a real title and seeing that service's results. Never add
+  affiliate or tracking parameters.
 - `data/trials.yaml` (coming in milestone 3): free-trial offers.
 
 When you open a pull request that changes these files, please include:

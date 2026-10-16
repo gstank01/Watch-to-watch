@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { watchLinkFor, type WatchLink } from "@/lib/availability/links";
 import { getFreeServices } from "@/lib/data/free-services";
+import { getProviderLinks } from "@/lib/data/provider-links";
 import { getRegion } from "@/lib/region";
 import { regionInfo } from "@/lib/region-shared";
 import { getMovie, getTv, getWatchProviders, TmdbError } from "@/lib/tmdb";
@@ -89,6 +91,14 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
   if (!info) return <DataProblem message={titleResult.problem ?? ""} />;
   const { name } = regionInfo(region);
   const free = getFreeServices(region);
+  const links = getProviderLinks();
+  const watchLinks: Record<number, WatchLink> = {};
+  for (const type of ["flatrate", "free", "ads", "rent", "buy"] as const) {
+    for (const p of providers[type] ?? []) {
+      const link = watchLinkFor(links, p.provider_id, region, info.title);
+      if (link) watchLinks[p.provider_id] = link;
+    }
+  }
 
   return (
     <article className="grid gap-8 md:grid-cols-[240px_1fr]">
@@ -129,6 +139,7 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
             providers={providers}
             freeProviderIds={free.map((f) => f.provider_id)}
             freeNotes={Object.fromEntries(free.map((f) => [f.provider_id, f.notes]))}
+            watchLinks={watchLinks}
           />
         )}
       </div>

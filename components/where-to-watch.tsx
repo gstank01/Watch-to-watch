@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { groupProviders, type GroupedProvider, type ProviderGroup } from "@/lib/availability/group";
+import type { WatchLink } from "@/lib/availability/links";
 import { useMyServices } from "@/lib/services/store";
 import type { MonetizationType, RegionProviders } from "@/lib/tmdb/schemas";
 import { ProviderLogo } from "./provider-logo";
@@ -20,16 +21,25 @@ type Props = {
   providers: RegionProviders;
   freeProviderIds: number[];
   freeNotes: Record<number, string>;
+  /** Direct links to each service, from provider-links.yaml (see lib/availability/links.ts). */
+  watchLinks: Record<number, WatchLink>;
 };
 
-export function WhereToWatch({ title, regionName, providers, freeProviderIds, freeNotes }: Props) {
+export function WhereToWatch({
+  title,
+  regionName,
+  providers,
+  freeProviderIds,
+  freeNotes,
+  watchLinks,
+}: Props) {
   const services = useMyServices();
   const groups = groupProviders({
     providers,
     userServices: services ?? [],
     freeProviderIds,
   });
-  const link = providers.link ?? null;
+  const tmdbLink = providers.link ?? null;
 
   return (
     <section aria-labelledby="where-to-watch" className="space-y-4">
@@ -60,7 +70,8 @@ export function WhereToWatch({ title, regionName, providers, freeProviderIds, fr
               <ProviderList
                 group={group}
                 title={title}
-                link={link}
+                watchLinks={watchLinks}
+                tmdbLink={tmdbLink}
                 freeNotes={freeNotes}
                 freeIds={freeProviderIds}
               />
@@ -81,7 +92,8 @@ export function WhereToWatch({ title, regionName, providers, freeProviderIds, fr
               <ProviderList
                 group={group}
                 title={title}
-                link={link}
+                watchLinks={watchLinks}
+                tmdbLink={tmdbLink}
                 freeNotes={freeNotes}
                 freeIds={freeProviderIds}
               />
@@ -91,11 +103,20 @@ export function WhereToWatch({ title, regionName, providers, freeProviderIds, fr
       )}
 
       <p className="text-muted text-xs">
-        Availability from{" "}
+        Buttons open each service&apos;s own website. Availability from{" "}
         <a className="underline" href="https://www.justwatch.com/" rel="noopener noreferrer">
           JustWatch
         </a>{" "}
-        via TMDB. It can take a day or two to catch up with changes.
+        via TMDB; it can take a day or two to catch up with changes.
+        {tmdbLink && (
+          <>
+            {" "}
+            <a className="underline" href={tmdbLink} target="_blank" rel="noopener noreferrer">
+              See this title on TMDB
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </>
+        )}
       </p>
     </section>
   );
@@ -104,13 +125,15 @@ export function WhereToWatch({ title, regionName, providers, freeProviderIds, fr
 function ProviderList({
   group,
   title,
-  link,
+  watchLinks,
+  tmdbLink,
   freeNotes,
   freeIds,
 }: {
   group: ProviderGroup;
   title: string;
-  link: string | null;
+  watchLinks: Record<number, WatchLink>;
+  tmdbLink: string | null;
   freeNotes: Record<number, string>;
   freeIds: number[];
 }) {
@@ -121,7 +144,8 @@ function ProviderList({
           key={p.id}
           provider={p}
           title={title}
-          link={link}
+          watchLink={watchLinks[p.id]}
+          tmdbLink={tmdbLink}
           note={freeNotes[p.id]}
           isFree={freeIds.includes(p.id)}
         />
@@ -133,13 +157,15 @@ function ProviderList({
 function ProviderRow({
   provider,
   title,
-  link,
+  watchLink,
+  tmdbLink,
   note,
   isFree,
 }: {
   provider: GroupedProvider;
   title: string;
-  link: string | null;
+  watchLink?: WatchLink;
+  tmdbLink: string | null;
   note?: string;
   /** Listed in free-services.yaml: TMDB's "flatrate" really means free here. */
   isFree: boolean;
@@ -147,6 +173,20 @@ function ProviderRow({
   const offers = [
     ...new Set(provider.offers.map((o) => (isFree && o === "flatrate" ? "Free" : OFFER_LABELS[o]))),
   ];
+  // Straight to the service when we know how; otherwise TMDB's page for the title.
+  const button = watchLink
+    ? {
+        href: watchLink.url,
+        label: watchLink.kind === "search" ? `Watch on ${provider.name}` : `Open ${provider.name}`,
+        hint:
+          watchLink.kind === "search"
+            ? `– search for ${title}`
+            : `– then search for ${title} on ${provider.name}`,
+      }
+    : tmdbLink
+      ? { href: tmdbLink, label: "Find on TMDB", hint: `– ${title} on ${provider.name}` }
+      : null;
+
   return (
     <li className="flex flex-wrap items-center gap-3 py-3" data-provider-id={provider.id}>
       <ProviderLogo path={provider.logoPath} name={provider.name} />
@@ -157,15 +197,15 @@ function ProviderRow({
           {note ? ` · ${note}` : ""}
         </p>
       </div>
-      {link && (
+      {button && (
         <a
-          href={link}
+          href={button.href}
           target="_blank"
           rel="noopener noreferrer"
           className="border-border bg-surface hover:bg-surface-2 rounded-lg border px-3 py-2 text-sm font-medium"
         >
-          Watch on {provider.name}
-          <span className="sr-only"> – {title} (opens in a new tab)</span>
+          {button.label}
+          <span className="sr-only"> {button.hint} (opens in a new tab)</span>
         </a>
       )}
     </li>
