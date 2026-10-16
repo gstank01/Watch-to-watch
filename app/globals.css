@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
+/* Colour tokens. Text/background pairs meet WCAG 2.2 AA (4.5:1) in both themes. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f7f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --fg: #14151a;
+  --muted: #555b69;
+  --border: #d9dce3;
+  --accent: #3b3bc4;
+  --accent-fg: #ffffff;
+  --accent-soft: #e7e7fb;
+  --free: #146c43;
+  --free-soft: #e1f3ea;
+  --focus: #3b3bc4;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0f1015;
+    --surface: #181a21;
+    --surface-2: #22252e;
+    --fg: #ecedf2;
+    --muted: #a5abb9;
+    --border: #2f333e;
+    --accent: #a5a8ff;
+    --accent-fg: #11113a;
+    --accent-soft: #24264a;
+    --free: #6fd6a2;
+    --free-soft: #15301f;
+    --focus: #a5a8ff;
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-free: var(--free);
+  --color-free-soft: var(--free-soft);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WhatToWatch
 
-## Getting Started
+A free, non-commercial web app that helps people find something to watch across
+every streaming service. It puts the services you already have and free options
+first, and (soon) makes free trials painless by reminding you to cancel before
+you're charged.
 
-First, run the development server:
+Film and TV data from [TMDB](https://www.themoviedb.org/). Streaming
+availability from [JustWatch](https://www.justwatch.com/) via TMDB. This product
+uses the TMDB API but is not endorsed or certified by TMDB.
+
+The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
+
+## Status
+
+| Milestone                                   | Status      |
+| ------------------------------------------- | ----------- |
+| M1: Search and where to watch (no accounts) | ✅ Done     |
+| M2: Browse                                  | Not started |
+| M3: Free trials (no accounts)               | Not started |
+| M4: Accounts, watchlist, trial tracker      | Not started |
+| M5: Smart suggestions and alerts            | Not started |
+
+### What M1 includes
+
+- Search with autocomplete (`/api/search`, debounced, keyboard accessible) and a full results page.
+- Title pages (`/movie/[id]`, `/tv/[id]`) with where-to-watch grouped as **On your services →
+  Free → Free trial available → Other subscriptions → Rent / buy** (rent/buy collapsed).
+- "My services" picker (`/services`), stored in `localStorage` (every access wrapped in
+  try/catch, with an in-memory fallback).
+- Region switcher (all TMDB watch regions; default `GB`), stored in a cookie.
+- Home page: hero search, services prompt, popular on your services, popular in your region.
+- About page with TMDB and JustWatch attribution and a plain-English privacy summary.
+- Typed, zod-validated TMDB client with caching and retry/backoff on 429.
+- `data/free-services.yaml`, schema-validated at build time.
+
+## Getting started
+
+Requires Node 22+.
 
 ```bash
+npm ci
+cp .env.example .env.local   # then set TMDB_API_TOKEN
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Get a TMDB token at <https://www.themoviedb.org/settings/api>. Use the **API Read Access Token**
+(v4 bearer), not the v3 API key.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Name                           | Needed from | Purpose                                                           |
+| ------------------------------ | ----------- | ----------------------------------------------------------------- |
+| `TMDB_API_TOKEN`               | M1          | TMDB bearer token. Server-side only.                              |
+| `TMDB_API_BASE_URL`            | tests       | Overrides the TMDB base URL (the e2e tests point it at the mock). |
+| `DEFAULT_REGION`               | M1          | Region for new visitors. Defaults to `GB`.                        |
+| `DATABASE_URL`                 | M4          | Postgres connection string.                                       |
+| `AUTH_SECRET`, `AUTH_URL`      | M4          | Auth.js.                                                          |
+| `RESEND_API_KEY`, `EMAIL_FROM` | M4          | Email.                                                            |
+| `CRON_SECRET`                  | M4          | Bearer secret for cron routes.                                    |
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command                                                  | What it does                                                                        |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run dev`                                            | Dev server                                                                          |
+| `npm run build`                                          | Validates `data/*.yaml`, then builds                                                |
+| `npm run lint` / `format` / `format:check` / `typecheck` | Code quality                                                                        |
+| `npm test`                                               | Unit tests (Vitest, TMDB mocked with MSW)                                           |
+| `npm run test:e2e`                                       | Playwright against the production build and a mock TMDB. Run `npm run build` first. |
+| `npm run validate-data`                                  | Validates the curated YAML files                                                    |
+| `npm run verify-providers`                               | Checks provider ids in the data files against the live TMDB API                     |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The e2e suite runs on desktop and mobile viewports and includes axe WCAG 2.2 AA checks in light
+and dark mode.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Updating curated data
 
-## Deploy on Vercel
+`data/free-services.yaml` lists providers that are free in each region. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for how to propose changes. Before launch, run
+`npm run verify-providers` with a real token to confirm every provider id.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/              Routes (pages + API)
+components/       UI components
+lib/tmdb/         Typed TMDB client, zod schemas, caching
+lib/availability/ Where-to-watch grouping
+lib/data/         Curated data loaders and schemas
+lib/services/     "My services" browser store
+data/             Curated YAML data
+tests/unit        Vitest
+tests/e2e         Playwright
+tests/mocks       MSW handlers and fixtures for TMDB
+```
+
+## Open questions (from the spec)
+
+1. App name and domain (placeholder: WhatToWatch).
+2. Regions at launch: M1 supports every TMDB region. Curated free-service data is GB only so far.
+3. Who maintains the curated data monthly, and do we accept community PRs from day one?
+4. Should anonymous users be able to keep a watchlist in localStorage?
+
+## Licence
+
+Not yet chosen.

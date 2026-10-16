@@ -1,0 +1,37 @@
+# Providers that are free to watch in a region (no subscription).
+#
+# TMDB often lists these as `flatrate` (subscription); entries here make the
+# app classify them as "Free" instead. Free-with-ads services that TMDB already
+# lists as `free` or `ads` don't strictly need an entry, but listing them keeps
+# the classification explicit.
+#
+# provider_id is the TMDB watch-provider id. Check ids against the live API with
+# `npm run verify-providers` (needs TMDB_API_TOKEN) before launch.
+- provider_id: 38
+  provider_name: BBC iPlayer
+  region: GB
+  notes: Needs a TV Licence.
+- provider_id: 41
+  provider_name: ITVX
+  region: GB
+  notes: Free with ads. Live TV needs a TV Licence.
+- provider_id: 103
+  provider_name: Channel 4
+  region: GB
+  notes: Free with ads. Live TV needs a TV Licence.
+- provider_id: 333
+  provider_name: My5
+  region: GB
+  notes: Free with ads. Live TV needs a TV Licence.
+- provider_id: 300
+  provider_name: Pluto TV
+  region: GB
+  notes: Free with ads.
+- provider_id: 538
+  provider_name: Plex
+  region: GB
+  notes: Free with ads.
+- provider_id: 73
+  provider_name: Tubi TV
+  region: GB
+  notes: Free with ads.
