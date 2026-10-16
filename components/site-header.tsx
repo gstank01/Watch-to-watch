@@ -11,9 +11,15 @@ export async function SiteHeader() {
         <Link href="/" className="text-lg font-bold tracking-tight">
           What<span className="text-accent">To</span>Watch
         </Link>
-        <nav aria-label="Main" className="flex flex-1 items-center gap-4 text-sm">
+        <nav
+          aria-label="Main"
+          className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-sm whitespace-nowrap"
+        >
           <Link href="/search" className="hover:underline">
             Search
+          </Link>
+          <Link href="/my-list" className="hover:underline">
+            My list
           </Link>
           <Link href="/services" className="hover:underline">
             My services

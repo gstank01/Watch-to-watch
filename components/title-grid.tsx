@@ -6,7 +6,11 @@ export function titleHref(t: Pick<TitleSummary, "id" | "mediaType">) {
   return `/${t.mediaType}/${t.id}`;
 }
 
-export function TitleCard({ title }: { title: TitleSummary }) {
+type CardTitle = Pick<TitleSummary, "id" | "mediaType" | "title" | "year" | "posterPath"> & {
+  rating?: number | null;
+};
+
+export function TitleCard({ title, children }: { title: CardTitle; children?: React.ReactNode }) {
   return (
     <li>
       <Link href={titleHref(title)} className="group block rounded-lg">
@@ -22,6 +26,7 @@ export function TitleCard({ title }: { title: TitleSummary }) {
           {title.rating ? ` · ★ ${title.rating.toFixed(1)}` : ""}
         </p>
       </Link>
+      {children}
     </li>
   );
 }

@@ -33,6 +33,12 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   the visitor's own choice is saved in a cookie and always wins.
 - Home page: hero search, services prompt, popular on your services, popular in your region.
 - About page with TMDB and JustWatch attribution and a plain-English privacy summary.
+
+### Added ahead of schedule
+
+- **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
+  page, with a tab per list. A title can be a favourite and have one watch status. Saved in this
+  browser (`localStorage`) until accounts arrive in M4. Logic in `lib/library/model.ts`.
 - Typed, zod-validated TMDB client with caching and retry/backoff on 429.
 - `data/free-services.yaml`, schema-validated at build time.
 - Posters and logos are served from the app's own domain through Next.js image optimization
@@ -132,7 +138,7 @@ tests/mocks       MSW handlers and fixtures for TMDB
    Bulgarian free services still need adding and verifying. The UI is English; Bulgarian
    translation is planned.
 3. Who maintains the curated data monthly, and do we accept community PRs from day one?
-4. Should anonymous users be able to keep a watchlist in localStorage?
+4. ~~Should anonymous users be able to keep a watchlist in localStorage?~~ Yes: My list.
 
 ## Licence
 

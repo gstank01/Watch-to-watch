@@ -9,6 +9,7 @@ import type { MediaType, RegionProviders } from "@/lib/tmdb/schemas";
 import { reportTmdbError } from "@/lib/tmdb/problem";
 import { DataProblem } from "./data-problem";
 import { Poster } from "./poster";
+import { TitleActions } from "./title-actions";
 import { WhereToWatch } from "./where-to-watch";
 
 export function parseId(raw: string) {
@@ -128,6 +129,15 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
               .join(" · ")}
           </p>
         </header>
+        <TitleActions
+          title={{
+            id,
+            mediaType,
+            title: info.title,
+            year: info.year,
+            posterPath: info.posterPath,
+          }}
+        />
         {info.overview && <p className="max-w-prose leading-relaxed">{info.overview}</p>}
 
         {problem ? (

@@ -197,7 +197,10 @@ model WatchlistItem {
   userId      String
   tmdbId      Int
   mediaType   MediaType
+  favourite   Boolean    @default(false)
+  status      WatchStatus?             // null = favourite only
   addedAt     DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, tmdbId, mediaType])
 }
@@ -225,6 +228,7 @@ model Trial {
 }
 
 enum MediaType   { MOVIE TV }
+enum WatchStatus { WANT WATCHING WATCHED }
 enum TrialStatus { ACTIVE CANCELLED KEPT EXPIRED }
 ```
 
@@ -344,7 +348,7 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 
 ### M4: Accounts, watchlist, trial tracker
 - Postgres + Prisma, Auth.js magic link, settings, account deletion.
-- Sync localStorage services into the account on first sign-in.
+- Sync localStorage services and My list (favourites + watch status) into the account on first sign-in.
 - Watchlist, dashboard, trial records, trial reminder cron + emails with one-click status links.
 
 **Accept when:** a trial started today with 7 days produces a reminder email on day 5 (tested with a fake clock); unsubscribe and delete account work.
@@ -361,4 +365,4 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 1. App name and domain (placeholder: WhatToWatch).
 2. Which regions to support at launch: GB only, or all TMDB regions with trial data only for GB?
 3. Who maintains `trials.yaml` monthly, and should we accept community PRs from day one?
-4. Should anonymous users be able to keep a watchlist in localStorage, or is the watchlist account-only?
+4. ~~Should anonymous users be able to keep a watchlist in localStorage, or is the watchlist account-only?~~ **Decided: yes.** "My list" (favourites plus Want to watch / Watching / Watched) was added early, before M2, at the owner's request. It lives in localStorage (`wtw:library:v1`) and moves into the account in M4. Availability alerts (Flow E) still need an account.

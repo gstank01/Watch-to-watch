@@ -60,7 +60,11 @@ export default function AboutPage() {
           <li>
             Without an account, your services are saved in your browser only. We never receive them.
           </li>
-          <li>We remember your region in a cookie so pages show the right services.</li>
+          <li>
+            Your list (favourites, want to watch, watching, watched) is also saved in your browser
+            only.
+          </li>
+          <li>We remember your country in a cookie so pages show the right services.</li>
           <li>No analytics, advertising or tracking cookies. Ever.</li>
           <li>We never ask for or store your streaming passwords.</li>
           <li>
