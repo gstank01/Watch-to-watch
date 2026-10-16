@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const MOCK_PORT = Number(process.env.MOCK_TMDB_PORT ?? 4010);
+export const UNCONFIGURED_PORT = PORT + 1;
 
 /**
  * End-to-end tests run the production build against a mock TMDB API (see
@@ -51,6 +52,13 @@ export default defineConfig({
         TMDB_API_BASE_URL: `http://localhost:${MOCK_PORT}/3`,
         DEFAULT_REGION: "GB",
       },
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      // Misconfigured on purpose (no TMDB token) for tests/e2e/setup-problems.spec.ts.
+      command: `npx next start -p ${UNCONFIGURED_PORT}`,
+      port: UNCONFIGURED_PORT,
+      env: { TMDB_API_TOKEN: "", TMDB_API_BASE_URL: `http://localhost:${MOCK_PORT}/3` },
       reuseExistingServer: !process.env.CI,
     },
   ],

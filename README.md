@@ -49,6 +49,19 @@ npm run dev
 Get a TMDB token at <https://www.themoviedb.org/settings/api>. Use the **API Read Access Token**
 (v4 bearer), not the v3 API key.
 
+### Troubleshooting: "Site setup problem" or no films, shows or services
+
+Every page needs TMDB. If none of them show data, the page and the server log say why:
+
+- **"the server has no TMDB API token"**: `TMDB_API_TOKEN` isn't set. Locally, put it in
+  `.env.local` in the project folder (next to `package.json`) and **restart** `npm run dev`. On
+  Vercel, add it under Project → Settings → Environment Variables, then **redeploy**.
+- **"TMDB_API_TOKEN is the short API Key"** or **"TMDB rejected the API token"**: you've used the
+  32-character _API Key_. Copy the long **API Read Access Token** (starts with `eyJ`) from
+  <https://www.themoviedb.org/settings/api> instead.
+- Anything else: look for lines starting with `[tmdb]` in the terminal running the app (or Vercel →
+  Logs). They say which request failed and how.
+
 ### Environment variables
 
 | Name                           | Needed from | Purpose                                                           |

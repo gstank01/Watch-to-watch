@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
+import { DataProblem } from "@/components/data-problem";
 import { ServicesPicker } from "@/components/services-picker";
 import { getFreeProviderIds } from "@/lib/data/free-services";
 import { getRegion } from "@/lib/region";
 import { regionInfo } from "@/lib/region-shared";
 import { getProviders } from "@/lib/tmdb";
+import { reportTmdbError } from "@/lib/tmdb/problem";
+import type { ProviderInfo } from "@/lib/tmdb/types";
 
 export const metadata: Metadata = { title: "My services" };
 
 export default async function ServicesPage() {
   const region = await getRegion();
   const { name } = regionInfo(region);
-  const providers = await getProviders(region).catch(() => null);
+  let providers: ProviderInfo[] | null = null;
+  let problem: string | null = null;
+  try {
+    providers = await getProviders(region);
+  } catch (err) {
+    problem = reportTmdbError(err, `services list (${region})`);
+  }
 
   return (
     <div className="space-y-6">
@@ -24,9 +33,7 @@ export default async function ServicesPage() {
       {providers ? (
         <ServicesPicker providers={providers} freeProviderIds={getFreeProviderIds(region)} />
       ) : (
-        <p className="text-muted">
-          We can&apos;t load the list of services right now. Please try again shortly.
-        </p>
+        <DataProblem message={problem ?? ""} />
       )}
     </div>
   );

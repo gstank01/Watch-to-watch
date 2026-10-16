@@ -1,21 +1,23 @@
+import { DataProblem } from "@/components/data-problem";
 import { HomePersonal } from "@/components/home-personal";
 import { SearchBox } from "@/components/search-box";
 import { TitleGrid } from "@/components/title-grid";
 import { popularStreaming } from "@/lib/popular";
 import { getRegion } from "@/lib/region";
 import { regionInfo } from "@/lib/region-shared";
+import { reportTmdbError } from "@/lib/tmdb/problem";
 
 async function loadPopular(region: string) {
   try {
-    return await popularStreaming(region);
-  } catch {
-    return null;
+    return { titles: await popularStreaming(region), problem: null };
+  } catch (err) {
+    return { titles: null, problem: reportTmdbError(err, `home popular (${region})`) };
   }
 }
 
 export default async function Home() {
   const region = await getRegion();
-  const popular = await loadPopular(region);
+  const { titles: popular, problem } = await loadPopular(region);
   const { name } = regionInfo(region);
 
   return (
@@ -40,10 +42,7 @@ export default async function Home() {
         {popular ? (
           <TitleGrid titles={popular} label={`Popular to stream in ${name}`} />
         ) : (
-          <p className="text-muted">
-            We can&apos;t reach our film data source right now. Search still works once it&apos;s
-            back — please try again shortly.
-          </p>
+          <DataProblem message={problem ?? ""} />
         )}
       </section>
     </div>

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clientKey, createRateLimiter } from "@/lib/rate-limit";
 import { getRegion } from "@/lib/region";
+import { reportTmdbError } from "@/lib/tmdb/problem";
 import { searchTitles } from "@/lib/tmdb";
 
 const limiter = createRateLimiter({ limit: 60, windowMs: 60_000 });
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
         posterPath,
       })),
     });
-  } catch {
+  } catch (err) {
+    reportTmdbError(err, "api search");
     return NextResponse.json({ error: "Search is unavailable right now" }, { status: 502 });
   }
 }

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { DataProblem } from "@/components/data-problem";
 import { SearchBox } from "@/components/search-box";
 import { TitleGrid } from "@/components/title-grid";
 import { getRegion } from "@/lib/region";
 import { searchTitles } from "@/lib/tmdb";
+import { reportTmdbError } from "@/lib/tmdb/problem";
 import type { TitleSummary } from "@/lib/tmdb/types";
 
 export async function generateMetadata(props: PageProps<"/search">): Promise<Metadata> {
@@ -16,12 +18,12 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const region = await getRegion();
 
   let results: TitleSummary[] | null = null;
-  let failed = false;
+  let problem: string | null = null;
   if (q) {
     try {
       results = (await searchTitles(q, region)).results;
-    } catch {
-      failed = true;
+    } catch (err) {
+      problem = reportTmdbError(err, "search page");
     }
   }
 
@@ -31,9 +33,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
       <div className="max-w-2xl">
         <SearchBox key={q} defaultValue={q} size="md" autoFocus={!q} />
       </div>
-      {failed && (
-        <p className="text-muted">Search is unavailable right now. Please try again shortly.</p>
-      )}
+      {problem && <DataProblem message={problem} />}
       {results &&
         (results.length ? (
           <TitleGrid titles={results} label={`Results for ${q}`} />

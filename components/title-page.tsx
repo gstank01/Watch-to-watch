@@ -4,6 +4,8 @@ import { getRegion } from "@/lib/region";
 import { regionInfo } from "@/lib/region-shared";
 import { getMovie, getTv, getWatchProviders, TmdbError } from "@/lib/tmdb";
 import type { MediaType, RegionProviders } from "@/lib/tmdb/schemas";
+import { reportTmdbError } from "@/lib/tmdb/problem";
+import { DataProblem } from "./data-problem";
 import { Poster } from "./poster";
 import { WhereToWatch } from "./where-to-watch";
 
@@ -63,18 +65,28 @@ export async function loadTitle(mediaType: MediaType, id: number): Promise<Title
 
 async function loadProviders(mediaType: MediaType, id: number, region: string) {
   try {
-    return { providers: await getWatchProviders(mediaType, id, region), failed: false };
-  } catch {
-    return { providers: {} as RegionProviders, failed: true };
+    return { providers: await getWatchProviders(mediaType, id, region), problem: null };
+  } catch (err) {
+    const problem = reportTmdbError(err, `watch providers ${mediaType}/${id} (${region})`);
+    return { providers: {} as RegionProviders, problem };
   }
 }
 
 export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: number }) {
   const region = await getRegion();
-  const [info, { providers, failed }] = await Promise.all([
-    loadTitle(mediaType, id),
+  const [titleResult, { providers, problem }] = await Promise.all([
+    loadTitle(mediaType, id).then(
+      (info) => ({ info, problem: null }),
+      (err: unknown) => {
+        // notFound() and other framework signals must keep propagating.
+        if (!(err instanceof TmdbError)) throw err;
+        return { info: null, problem: reportTmdbError(err, `details ${mediaType}/${id}`) };
+      },
+    ),
     loadProviders(mediaType, id, region),
   ]);
+  const { info } = titleResult;
+  if (!info) return <DataProblem message={titleResult.problem ?? ""} />;
   const { name } = regionInfo(region);
   const free = getFreeServices(region);
 
@@ -108,10 +120,8 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
         </header>
         {info.overview && <p className="max-w-prose leading-relaxed">{info.overview}</p>}
 
-        {failed ? (
-          <p className="border-border bg-surface text-muted rounded-lg border p-4">
-            Streaming availability is temporarily unavailable. Please try again shortly.
-          </p>
+        {problem ? (
+          <DataProblem message={problem} />
         ) : (
           <WhereToWatch
             title={info.title}

@@ -99,10 +99,46 @@ describe("TMDB client", () => {
     );
   });
 
-  it("refuses to run without a token", async () => {
+  it("refuses to run without a token (a setup problem)", async () => {
     const token = process.env.TMDB_API_TOKEN;
     delete process.env.TMDB_API_TOKEN;
-    await expect(searchTitles("bear", "GB")).rejects.toThrow(/TMDB_API_TOKEN/);
+    await expect(searchTitles("bear", "GB")).rejects.toMatchObject({ kind: "config" });
     process.env.TMDB_API_TOKEN = token;
+  });
+
+  it("spots the short v3 API key used in place of the read access token", async () => {
+    const token = process.env.TMDB_API_TOKEN;
+    process.env.TMDB_API_TOKEN = "0123456789abcdef0123456789abcdef";
+    await expect(searchTitles("bear", "GB")).rejects.toMatchObject({
+      kind: "config",
+      message: expect.stringMatching(/v3 API key/),
+    });
+    process.env.TMDB_API_TOKEN = token;
+  });
+
+  it("reports a rejected token as an auth problem without retrying", async () => {
+    let calls = 0;
+    server.use(
+      http.get("*/watch/providers/tv", () => {
+        calls++;
+        return HttpResponse.json({ status_code: 7 }, { status: 401 });
+      }),
+    );
+    await expect(getProviders("BG")).rejects.toMatchObject({ kind: "auth", status: 401 });
+    expect(calls).toBe(1);
+  });
+
+  it("retries network failures, then reports them", async () => {
+    let calls = 0;
+    server.use(
+      http.get("*/genre/tv/list", () => {
+        calls++;
+        return HttpResponse.error();
+      }),
+    );
+    await expect(
+      tmdbFetch("/genre/tv/list", genreListSchema, { revalidate: 1, maxAttempts: 2 }),
+    ).rejects.toMatchObject({ kind: "network" });
+    expect(calls).toBe(2);
   });
 });
