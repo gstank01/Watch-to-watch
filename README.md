@@ -35,6 +35,9 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - About page with TMDB and JustWatch attribution and a plain-English privacy summary.
 - Typed, zod-validated TMDB client with caching and retry/backoff on 429.
 - `data/free-services.yaml`, schema-validated at build time.
+- Posters and logos are served from the app's own domain through Next.js image optimization
+  (`/_next/image`), so they show even where `image.tmdb.org` is blocked; a title or initials
+  replace any image that still fails.
 - "Watch on …" buttons go straight to each service (its own search for the title, or its home
   page) using `data/provider-links.yaml`; TMDB's page is only a fallback.
 

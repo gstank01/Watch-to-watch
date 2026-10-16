@@ -9,11 +9,14 @@ const nextConfig: NextConfig = {
     "/**": ["./data/**/*.yaml"],
   },
   images: {
-    // Posters are served straight from TMDB's CDN, which already serves
-    // correctly sized images. Skipping the optimizer also keeps us inside
-    // TMDB's non-commercial terms (no re-hosting).
-    unoptimized: true,
-    remotePatterns: [{ protocol: "https", hostname: "image.tmdb.org" }],
+    // Posters and logos are fetched from TMDB by our server and served from our
+    // own domain (/_next/image), so they still show on networks or browsers that
+    // block image.tmdb.org, and arrive resized as WebP.
+    remotePatterns: [new URL("https://image.tmdb.org/t/p/**")],
+    qualities: [75],
+    // TMDB image paths are unique per file (new artwork gets a new path), so a
+    // long cache is safe.
+    minimumCacheTTL: 60 * 60 * 24 * 31,
   },
   turbopack: {
     rules: {

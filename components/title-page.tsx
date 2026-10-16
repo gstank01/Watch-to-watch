@@ -108,7 +108,7 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
           title={info.title}
           size="w500"
           sizes="(min-width: 768px) 240px, 192px"
-          priority
+          preload
         />
       </div>
       <div className="space-y-6">

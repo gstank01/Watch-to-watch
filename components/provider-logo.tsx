@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { logoUrl } from "@/lib/tmdb/images";
 
 export function ProviderLogo({
@@ -10,8 +13,10 @@ export function ProviderLogo({
   name: string;
   size?: number;
 }) {
-  const src = logoUrl(path, size > 45 ? "w92" : "w45");
-  if (!src) {
+  // w92 source so the optimizer has enough pixels for high-density screens.
+  const src = logoUrl(path, "w92");
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
     return (
       <span
         aria-hidden
@@ -29,6 +34,7 @@ export function ProviderLogo({
       alt=""
       width={size}
       height={size}
+      onError={() => setFailed(true)}
       className="shrink-0 rounded-md"
       style={{ width: size, height: size }}
     />

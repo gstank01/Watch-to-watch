@@ -80,6 +80,22 @@ test.describe("Flow A: search → where to watch", () => {
     );
   });
 
+  test("images come from our own domain, not image.tmdb.org", async ({ request }) => {
+    // Check the server-rendered HTML: in tests the fake posters fail to load, so the
+    // browser swaps them for the title fallback.
+    const html = await (await request.get("/tv/136315")).text();
+    expect(html).toContain(
+      'src="/_next/image?url=https%3A%2F%2Fimage.tmdb.org%2Ft%2Fp%2Fw500%2Fthe-bear.jpg&amp;w=',
+    );
+    expect(html).not.toMatch(/src="https:\/\/image\.tmdb\.org/);
+    expect(html).not.toMatch(/srcSet="https:\/\/image\.tmdb\.org/i);
+  });
+
+  test("a poster that can't load shows the title instead", async ({ page }) => {
+    await page.goto("/tv/136315");
+    await expect(page.getByTestId("poster-fallback").first()).toHaveText("The Bear");
+  });
+
   test("pressing Enter shows full search results", async ({ page }) => {
     await page.goto("/");
     const search = page.getByRole("combobox", { name: "Search films and TV shows" });
