@@ -19,3 +19,9 @@ test("pages explain a missing TMDB token instead of failing silently", async ({ 
   await page.goto("/search?q=bear");
   await expect(page.getByRole("status")).toHaveText(MISSING_TOKEN);
 });
+
+test("accounts explain they aren't set up, and the app still works", async ({ page }) => {
+  await page.goto("/sign-in");
+  await expect(page.getByRole("status")).toContainText("Accounts aren't set up on this server yet");
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+});

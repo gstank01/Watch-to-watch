@@ -1,0 +1,118 @@
+// Run `npx prisma migrate dev --name <change>` after editing (needs DATABASE_URL).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- Better Auth (email magic link). Field names must match Better Auth's schema. ----
+
+model User {
+  id            String          @id
+  name          String
+  email         String          @unique
+  emailVerified Boolean         @default(false)
+  image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  services      UserService[]
+  watchlist     WatchlistItem[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Always null: we don't store IP addresses or browsers (see lib/auth/server.ts).
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ---- WhatToWatch ----
+
+model UserService {
+  userId     String
+  providerId Int // TMDB provider id
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, providerId])
+  @@map("user_service")
+}
+
+/// One title in a user's My list: a favourite and/or one watch status.
+model WatchlistItem {
+  userId     String
+  tmdbId     Int
+  mediaType  MediaType
+  // Snapshot so the list renders without calling TMDB.
+  title      String
+  year       String?
+  posterPath String?
+  favourite  Boolean      @default(false)
+  status     WatchStatus?
+  addedAt    DateTime     @default(now())
+  // When the user last changed it, set by the device that made the change.
+  updatedAt  DateTime
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, mediaType, tmdbId])
+  @@map("watchlist_item")
+}
+
+enum MediaType {
+  MOVIE
+  TV
+}
+
+enum WatchStatus {
+  WANT
+  WATCHING
+  WATCHED
+}

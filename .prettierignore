@@ -6,3 +6,6 @@ test-results
 coverage
 next-env.d.ts
 docs/SPEC.md
+lib/generated
+prisma/migrations
+.e2e-outbox

@@ -58,11 +58,21 @@ export default function AboutPage() {
         </h2>
         <ul className="list-disc space-y-2 pl-6">
           <li>
-            Without an account, your services are saved in your browser only. We never receive them.
+            Without an account, your services and your list (favourites, want to watch, watching,
+            watched) are saved in your browser only. We never receive them.
           </li>
           <li>
-            Your list (favourites, want to watch, watching, watched) is also saved in your browser
-            only.
+            With an account, we store your email address, your services and your list, so they
+            follow you to other devices. We use your email only to send sign-in links. We don&apos;t
+            record your IP address or browser.
+          </li>
+          <li>
+            Signing in sets one cookie to keep you signed in. Signing out removes your list from
+            that browser.
+          </li>
+          <li>
+            You can delete your account at any time in Account settings. Everything is deleted
+            immediately; we keep nothing.
           </li>
           <li>We remember your country in a cookie so pages show the right services.</li>
           <li>No analytics, advertising or tracking cookies. Ever.</li>

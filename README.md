@@ -13,39 +13,52 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 
 ## Status
 
-| Milestone                                   | Status      |
-| ------------------------------------------- | ----------- |
-| M1: Search and where to watch (no accounts) | ✅ Done     |
-| M2: Browse                                  | Not started |
-| M3: Free trials (no accounts)               | Not started |
-| M4: Accounts, watchlist, trial tracker      | Not started |
-| M5: Smart suggestions and alerts            | Not started |
+| Milestone                                   | Status                                          |
+| ------------------------------------------- | ----------------------------------------------- |
+| M1: Search and where to watch (no accounts) | ✅ Done                                         |
+| M2: Browse                                  | Not started                                     |
+| M3: Free trials (no accounts)               | Not started                                     |
+| M4: Accounts, watchlist, trial tracker      | Partly: accounts and My list ✅, trials to come |
+| M5: Smart suggestions and alerts            | Not started                                     |
 
-### What M1 includes
+### What's built
 
 - Search with autocomplete (`/api/search`, debounced, keyboard accessible) and a full results page.
 - Title pages (`/movie/[id]`, `/tv/[id]`) with where-to-watch grouped as **On your services →
   Free → Free trial available → Other subscriptions → Rent / buy** (rent/buy collapsed).
-- "My services" picker (`/services`), stored in `localStorage` (every access wrapped in
-  try/catch, with an in-memory fallback).
+- "Watch on …" buttons go straight to each service (its own search for the title, or its home
+  page) using `data/provider-links.yaml`; TMDB's page is only a fallback.
+- "My services" picker (`/services`).
+- **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
+  page, with a tab per list. A title can be a favourite and have one watch status
+  (`lib/library/model.ts`).
+- **Accounts (optional)**: sign in with an emailed link, no password (`/sign-in`). My list and
+  services are saved to the account and follow you to every device; `/settings` has sign out
+  and immediate account deletion. Without accounts configured, everything is saved in the
+  browser only.
 - Country picker in the header: 🇬🇧 United Kingdom and 🇧🇬 Bulgaria. First visit uses the
   visitor's country (Vercel's `x-vercel-ip-country` header) when supported, else `DEFAULT_REGION`;
   the visitor's own choice is saved in a cookie and always wins.
 - Home page: hero search, services prompt, popular on your services, popular in your region.
 - About page with TMDB and JustWatch attribution and a plain-English privacy summary.
-
-### Added ahead of schedule
-
-- **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
-  page, with a tab per list. A title can be a favourite and have one watch status. Saved in this
-  browser (`localStorage`) until accounts arrive in M4. Logic in `lib/library/model.ts`.
 - Typed, zod-validated TMDB client with caching and retry/backoff on 429.
-- `data/free-services.yaml`, schema-validated at build time.
 - Posters and logos are served from the app's own domain through Next.js image optimization
-  (`/_next/image`), so they show even where `image.tmdb.org` is blocked; a title or initials
-  replace any image that still fails.
-- "Watch on …" buttons go straight to each service (its own search for the title, or its home
-  page) using `data/provider-links.yaml`; TMDB's page is only a fallback.
+  (`/_next/image`), so they show even where `image.tmdb.org` is blocked.
+- `data/free-services.yaml` and `data/provider-links.yaml`, schema-validated at build time.
+
+### How accounts and syncing work
+
+- Sign-in uses [Better Auth](https://www.better-auth.com/) with its magic-link plugin, Postgres via
+  Prisma 7, and email through Resend behind an `EmailSender` interface (`lib/email`).
+- The browser keeps a copy of My list and services so pages stay instant and work offline.
+- **First sign-in in a browser:** whatever was saved there is merged into the account (newest
+  change wins per title).
+- **After that the account is the source of truth:** each visit loads the account's copy, so
+  changes and removals made on other devices show up. Changes are saved locally at once and sent
+  in the background; unsent changes wait and are retried (`lib/account/sync.ts`).
+- **Signing out** removes the list from that browser, so the next person doesn't see it.
+- Privacy: we store the email address, services and list. Sessions don't record IP addresses or
+  browsers. Account deletion is a hard delete of everything.
 
 ## Getting started
 
@@ -75,22 +88,40 @@ Every page needs TMDB. If none of them show data, the page and the server log sa
 
 ### Environment variables
 
-| Name                           | Needed from | Purpose                                                           |
-| ------------------------------ | ----------- | ----------------------------------------------------------------- |
-| `TMDB_API_TOKEN`               | M1          | TMDB bearer token. Server-side only.                              |
-| `TMDB_API_BASE_URL`            | tests       | Overrides the TMDB base URL (the e2e tests point it at the mock). |
-| `DEFAULT_REGION`               | M1          | Region for visitors outside a supported country. `GB` or `BG`.    |
-| `DATABASE_URL`                 | M4          | Postgres connection string.                                       |
-| `AUTH_SECRET`, `AUTH_URL`      | M4          | Auth.js.                                                          |
-| `RESEND_API_KEY`, `EMAIL_FROM` | M4          | Email.                                                            |
-| `CRON_SECRET`                  | M4          | Bearer secret for cron routes.                                    |
+| Name                           | Needed for | Purpose                                                                |
+| ------------------------------ | ---------- | ---------------------------------------------------------------------- |
+| `TMDB_API_TOKEN`               | Everything | TMDB bearer token. Server-side only.                                   |
+| `DEFAULT_REGION`               | Optional   | Region for visitors outside a supported country. `GB` or `BG`.         |
+| `DATABASE_URL`                 | Accounts   | Postgres connection string (Neon or Supabase).                         |
+| `AUTH_SECRET`                  | Accounts   | 32+ random characters: `openssl rand -base64 32`.                      |
+| `AUTH_URL`                     | Accounts   | The site's public address, e.g. `https://your-app.vercel.app`.         |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Accounts   | Sends sign-in links. In `npm run dev` without them, links are printed. |
+| `TMDB_API_BASE_URL`            | Tests      | Overrides the TMDB base URL (the e2e tests point it at the mock).      |
+| `CRON_SECRET`                  | Later      | Bearer secret for cron routes (M4 trial reminders, M5 alerts).         |
+
+### Turning on accounts
+
+Accounts switch on when all of `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL` and email are set. Until
+then the header has no "Sign in" link and `/sign-in` says what's missing.
+
+1. **Database:** create a free Postgres database at [Neon](https://neon.tech) (or Supabase) and
+   copy its connection string into `DATABASE_URL`.
+2. **Create the tables:** `npm run db:deploy` (on Vercel this runs automatically on each deploy).
+3. **Secret and address:** set `AUTH_SECRET` (`openssl rand -base64 32`) and `AUTH_URL` to the
+   site's address (`http://localhost:3000` locally).
+4. **Email:** create a [Resend](https://resend.com) account and verify a domain you own, then set
+   `RESEND_API_KEY` and `EMAIL_FROM` (e.g. `WhatToWatch <signin@your-domain.com>`). Without a
+   verified domain, Resend only delivers to your own address. Locally you can skip this step:
+   `npm run dev` prints sign-in links in the terminal.
+5. Restart the app (or redeploy on Vercel). "Sign in" appears in the header.
 
 ## Scripts
 
 | Command                                                  | What it does                                                                        |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `npm run dev`                                            | Dev server                                                                          |
-| `npm run build`                                          | Validates `data/*.yaml`, then builds                                                |
+| `npm run build`                                          | Generates the Prisma client, validates `data/*.yaml`, then builds                   |
+| `npm run db:migrate` / `db:deploy`                       | Create a migration after editing `prisma/schema.prisma` / apply migrations          |
 | `npm run lint` / `format` / `format:check` / `typecheck` | Code quality                                                                        |
 | `npm test`                                               | Unit tests (Vitest, TMDB mocked with MSW)                                           |
 | `npm run test:e2e`                                       | Playwright against the production build and a mock TMDB. Run `npm run build` first. |
@@ -98,7 +129,8 @@ Every page needs TMDB. If none of them show data, the page and the server log sa
 | `npm run verify-providers`                               | Checks provider ids in the data files against the live TMDB API                     |
 
 The e2e suite runs on desktop and mobile viewports and includes axe WCAG 2.2 AA checks in light
-and dark mode.
+and dark mode. The accounts tests need Postgres: set `E2E_DATABASE_URL` (CI does) to a throwaway
+database; without it they're skipped. Sign-in emails are written to `.e2e-outbox/` in tests.
 
 ## Adding a country
 

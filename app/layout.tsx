@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { AccountSync } from "@/components/account-sync";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getSessionUser } from "@/lib/auth/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +18,8 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await getSessionUser();
   return (
     <html lang="en-GB">
       <body className="flex min-h-dvh flex-col font-sans antialiased">
@@ -31,6 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <SiteFooter />
+        {user && <AccountSync userId={user.id} />}
       </body>
     </html>
   );

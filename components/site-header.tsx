@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { getSessionUser } from "@/lib/auth/server";
+import { accountsStatus } from "@/lib/auth/status";
 import { getRegion } from "@/lib/region";
 import { RegionSwitcher } from "./region-switcher";
 
 export async function SiteHeader() {
   const region = await getRegion();
+  const accounts = accountsStatus().enabled;
+  const user = accounts ? await getSessionUser() : null;
 
   return (
     <header className="border-border bg-surface border-b">
@@ -28,7 +32,20 @@ export async function SiteHeader() {
             About
           </Link>
         </nav>
-        <RegionSwitcher current={region} />
+        <div className="flex items-center gap-4 text-sm">
+          {user ? (
+            <Link href="/settings" className="hover:underline">
+              Account
+            </Link>
+          ) : (
+            accounts && (
+              <Link href="/sign-in" className="text-accent font-medium hover:underline">
+                Sign in
+              </Link>
+            )
+          )}
+          <RegionSwitcher current={region} />
+        </div>
       </div>
     </header>
   );

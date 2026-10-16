@@ -17,9 +17,25 @@ export function parseServices(raw: string | null): number[] {
 }
 
 const store = createLocalStore(SERVICES_KEY, parseServices);
+const listeners = new Set<(ids: number[]) => void>();
 
+export const readServices = store.read;
+
+/** A change made by the visitor (account sync listens to these). */
 export function writeServices(ids: number[]) {
+  const unique = [...new Set(ids)];
+  store.write(unique);
+  for (const listener of listeners) listener(unique);
+}
+
+/** Replace the services without it counting as the visitor's change. */
+export function replaceServices(ids: number[]) {
   store.write([...new Set(ids)]);
+}
+
+export function onServicesChange(listener: (ids: number[]) => void) {
+  listeners.add(listener);
+  return () => void listeners.delete(listener);
 }
 
 export function toggleService(current: number[], id: number) {
