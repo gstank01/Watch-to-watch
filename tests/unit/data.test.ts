@@ -16,6 +16,13 @@ describe("free-services.yaml", () => {
     );
   });
 
+  it("rejects regions the app doesn't support", () => {
+    const yaml = `- {provider_id: 8, provider_name: Netflix, region: US}\n`;
+    expect(() => parseDataFile(yaml, freeServicesFileSchema, "us.yaml")).toThrow(
+      /Region must be one of GB, BG/,
+    );
+  });
+
   it("rejects duplicate provider/region pairs", () => {
     const yaml = `- {provider_id: 38, provider_name: A, region: GB}\n- {provider_id: 38, provider_name: B, region: GB}\n`;
     expect(() => parseDataFile(yaml, freeServicesFileSchema, "dup.yaml")).toThrow(/Duplicate/);

@@ -81,6 +81,10 @@ export const WATCH_PROVIDERS: Record<string, unknown> = {
         flatrate: [PROVIDERS.disney],
         buy: [PROVIDERS.appleStore, PROVIDERS.amazonVideo, PROVIDERS.googlePlay],
       },
+      BG: {
+        link: "https://www.themoviedb.org/tv/136315-the-bear/watch?locale=BG",
+        flatrate: [PROVIDERS.disney],
+      },
       US: {
         link: "https://www.themoviedb.org/tv/136315-the-bear/watch?locale=US",
         flatrate: [PROVIDERS.hulu, PROVIDERS.disney],
@@ -96,6 +100,11 @@ export const WATCH_PROVIDERS: Record<string, unknown> = {
         flatrate: [PROVIDERS.netflix, PROVIDERS.iplayer],
         rent: [PROVIDERS.amazonVideo, PROVIDERS.appleStore],
         buy: [PROVIDERS.amazonVideo, PROVIDERS.appleStore],
+      },
+      // No BBC iPlayer outside the UK.
+      BG: {
+        link: "https://www.themoviedb.org/movie/116149-paddington/watch?locale=BG",
+        flatrate: [PROVIDERS.netflix],
       },
     },
   },
@@ -145,12 +154,6 @@ export const STREAMS_ON: Record<string, number[]> = {
   "movie/10142": [],
   "tv/136315": [337],
 };
-
-export const REGIONS = [
-  { iso_3166_1: "GB", english_name: "United Kingdom", native_name: "United Kingdom" },
-  { iso_3166_1: "US", english_name: "United States of America", native_name: "United States" },
-  { iso_3166_1: "IE", english_name: "Ireland", native_name: "Ireland" },
-];
 
 const withPriorities = (providers: ReturnType<typeof p>[]) =>
   providers.map((x) => ({ ...x, display_priorities: { GB: x.display_priority } }));

@@ -3,7 +3,7 @@ import { SearchBox } from "@/components/search-box";
 import { TitleGrid } from "@/components/title-grid";
 import { popularStreaming } from "@/lib/popular";
 import { getRegion } from "@/lib/region";
-import { regionName } from "@/lib/regions";
+import { regionInfo } from "@/lib/region-shared";
 
 async function loadPopular(region: string) {
   try {
@@ -15,7 +15,8 @@ async function loadPopular(region: string) {
 
 export default async function Home() {
   const region = await getRegion();
-  const [popular, name] = await Promise.all([loadPopular(region), regionName(region)]);
+  const popular = await loadPopular(region);
+  const { name } = regionInfo(region);
 
   return (
     <div className="space-y-10">

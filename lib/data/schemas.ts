@@ -1,7 +1,10 @@
 import { z } from "zod";
+import { SUPPORTED_REGION_CODES } from "@/lib/region-shared";
 
-/** ISO 3166-1 alpha-2, as TMDB uses for watch regions. */
-export const regionCodeSchema = z.string().regex(/^[A-Z]{2}$/, "Region must be like GB or US");
+/** A region listed in SUPPORTED_REGIONS (lib/region-shared.ts). */
+export const regionCodeSchema = z.string().refine((code) => SUPPORTED_REGION_CODES.includes(code), {
+  message: `Region must be one of ${SUPPORTED_REGION_CODES.join(", ")}`,
+});
 
 export const freeServiceSchema = z.object({
   provider_id: z.number().int().positive(),

@@ -1,14 +1,17 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { FALLBACK_REGION, REGION_COOKIE, isRegionCode } from "./region-shared";
+import { cookies, headers } from "next/headers";
+import { REGION_COOKIE, resolveRegion } from "./region-shared";
 
-export function defaultRegion() {
-  const env = process.env.DEFAULT_REGION;
-  return isRegionCode(env) ? env : FALLBACK_REGION;
-}
-
-/** The visitor's region: their saved choice, else DEFAULT_REGION. */
+/**
+ * The visitor's region: their saved choice, else their country from the
+ * hosting platform's geolocation header (Vercel sets `x-vercel-ip-country`),
+ * else DEFAULT_REGION. Only the two-letter country is used; nothing is stored.
+ */
 export async function getRegion(): Promise<string> {
-  const value = (await cookies()).get(REGION_COOKIE)?.value;
-  return isRegionCode(value) ? value : defaultRegion();
+  const [cookieStore, headerList] = await Promise.all([cookies(), headers()]);
+  return resolveRegion({
+    saved: cookieStore.get(REGION_COOKIE)?.value,
+    geo: headerList.get("x-vercel-ip-country"),
+    fallback: process.env.DEFAULT_REGION,
+  });
 }

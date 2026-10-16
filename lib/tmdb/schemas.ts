@@ -120,14 +120,3 @@ export const providerListSchema = z.object({
     }),
   ),
 });
-
-export const regionListSchema = z.object({
-  results: z.array(
-    z.object({
-      iso_3166_1: z.string(),
-      english_name: z.string(),
-      native_name: z.string().nullish(),
-    }),
-  ),
-});
-export type Region = { code: string; name: string };

@@ -2,20 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { REGION_COOKIE } from "@/lib/region-shared";
-import type { Region } from "@/lib/tmdb/schemas";
+import { REGION_COOKIE, SUPPORTED_REGIONS } from "@/lib/region-shared";
 
-export function RegionSwitcher({ current, regions }: { current: string; regions: Region[] }) {
+/** Country picker. Saves the choice in a cookie and re-renders the page for it. */
+export function RegionSwitcher({ current }: { current: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const options = regions.some((r) => r.code === current)
-    ? regions
-    : [{ code: current, name: current }, ...regions];
-
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="text-muted">Region</span>
+      <span className="sr-only">Country</span>
       <select
         className="border-border bg-surface rounded-md border px-2 py-1"
         value={current}
@@ -26,9 +22,9 @@ export function RegionSwitcher({ current, regions }: { current: string; regions:
           startTransition(() => router.refresh());
         }}
       >
-        {options.map((r) => (
+        {SUPPORTED_REGIONS.map((r) => (
           <option key={r.code} value={r.code}>
-            {r.name}
+            {r.flag} {r.label}
           </option>
         ))}
       </select>

@@ -2,17 +2,15 @@ import type { Metadata } from "next";
 import { ServicesPicker } from "@/components/services-picker";
 import { getFreeProviderIds } from "@/lib/data/free-services";
 import { getRegion } from "@/lib/region";
-import { regionName } from "@/lib/regions";
+import { regionInfo } from "@/lib/region-shared";
 import { getProviders } from "@/lib/tmdb";
 
 export const metadata: Metadata = { title: "My services" };
 
 export default async function ServicesPage() {
   const region = await getRegion();
-  const [name, providers] = await Promise.all([
-    regionName(region),
-    getProviders(region).catch(() => null),
-  ]);
+  const { name } = regionInfo(region);
+  const providers = await getProviders(region).catch(() => null);
 
   return (
     <div className="space-y-6">

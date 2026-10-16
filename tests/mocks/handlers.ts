@@ -5,7 +5,6 @@ import {
   GENRES,
   MOVIES,
   PROVIDER_LIST,
-  REGIONS,
   SEARCHABLE,
   STREAMS_ON,
   TV,
@@ -97,10 +96,6 @@ export const handlers = [
       const t = TV[Number(params.id)];
       return t ? HttpResponse.json(t) : notFound();
     }),
-  ),
-  http.get(
-    "*/watch/providers/regions",
-    authed(() => HttpResponse.json({ results: REGIONS })),
   ),
   http.get(
     "*/watch/providers/movie",

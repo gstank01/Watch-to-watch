@@ -28,7 +28,9 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   Free → Free trial available → Other subscriptions → Rent / buy** (rent/buy collapsed).
 - "My services" picker (`/services`), stored in `localStorage` (every access wrapped in
   try/catch, with an in-memory fallback).
-- Region switcher (all TMDB watch regions; default `GB`), stored in a cookie.
+- Country picker in the header: 🇬🇧 United Kingdom and 🇧🇬 Bulgaria. First visit uses the
+  visitor's country (Vercel's `x-vercel-ip-country` header) when supported, else `DEFAULT_REGION`;
+  the visitor's own choice is saved in a cookie and always wins.
 - Home page: hero search, services prompt, popular on your services, popular in your region.
 - About page with TMDB and JustWatch attribution and a plain-English privacy summary.
 - Typed, zod-validated TMDB client with caching and retry/backoff on 429.
@@ -53,7 +55,7 @@ Get a TMDB token at <https://www.themoviedb.org/settings/api>. Use the **API Rea
 | ------------------------------ | ----------- | ----------------------------------------------------------------- |
 | `TMDB_API_TOKEN`               | M1          | TMDB bearer token. Server-side only.                              |
 | `TMDB_API_BASE_URL`            | tests       | Overrides the TMDB base URL (the e2e tests point it at the mock). |
-| `DEFAULT_REGION`               | M1          | Region for new visitors. Defaults to `GB`.                        |
+| `DEFAULT_REGION`               | M1          | Region for visitors outside a supported country. `GB` or `BG`.    |
 | `DATABASE_URL`                 | M4          | Postgres connection string.                                       |
 | `AUTH_SECRET`, `AUTH_URL`      | M4          | Auth.js.                                                          |
 | `RESEND_API_KEY`, `EMAIL_FROM` | M4          | Email.                                                            |
@@ -73,6 +75,15 @@ Get a TMDB token at <https://www.themoviedb.org/settings/api>. Use the **API Rea
 
 The e2e suite runs on desktop and mobile viewports and includes axe WCAG 2.2 AA checks in light
 and dark mode.
+
+## Adding a country
+
+1. Add it to `SUPPORTED_REGIONS` in `lib/region-shared.ts`.
+2. Add its free services to `data/free-services.yaml` (and later its trials to `data/trials.yaml`),
+   then run `npm run verify-providers`.
+3. Add fixtures for it in `tests/mocks/fixtures.ts` and an e2e test.
+
+The data files reject regions that aren't in `SUPPORTED_REGIONS`.
 
 ## Updating curated data
 
@@ -98,7 +109,9 @@ tests/mocks       MSW handlers and fixtures for TMDB
 ## Open questions (from the spec)
 
 1. App name and domain (placeholder: WhatToWatch).
-2. Regions at launch: M1 supports every TMDB region. Curated free-service data is GB only so far.
+2. Regions at launch: United Kingdom and Bulgaria. Curated free-service data is GB only so far;
+   Bulgarian free services still need adding and verifying. The UI is English; Bulgarian
+   translation is planned.
 3. Who maintains the curated data monthly, and do we accept community PRs from day one?
 4. Should anonymous users be able to keep a watchlist in localStorage?
 

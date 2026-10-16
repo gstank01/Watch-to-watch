@@ -6,13 +6,11 @@ import {
   genreListSchema,
   movieDetailsSchema,
   providerListSchema,
-  regionListSchema,
   searchMultiSchema,
   tvDetailsSchema,
   watchProvidersSchema,
   type MediaType,
   type MovieResult,
-  type Region,
   type RegionProviders,
   type TvResult,
 } from "./schemas";
@@ -103,15 +101,6 @@ export async function getProviders(region: string): Promise<ProviderInfo[]> {
     });
   }
   return [...byId.values()].sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
-}
-
-export async function getRegions(): Promise<Region[]> {
-  const data = await tmdbFetch("/watch/providers/regions", regionListSchema, {
-    revalidate: CACHE.providers,
-  });
-  return data.results
-    .map((r) => ({ code: r.iso_3166_1, name: r.english_name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getGenres(mediaType: MediaType) {

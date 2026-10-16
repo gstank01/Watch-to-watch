@@ -107,15 +107,48 @@ test.describe("My services", () => {
   });
 });
 
-test.describe("Region", () => {
-  test("switching region changes where-to-watch", async ({ page }) => {
-    await page.goto("/tv/136315");
-    await page.getByLabel("Region").selectOption("US");
+test.describe("Country", () => {
+  test("the picker offers the UK and Bulgaria and switches where-to-watch", async ({ page }) => {
+    await page.goto("/movie/116149");
+    const picker = page.getByLabel("Country");
+    await expect(picker).toHaveValue("GB");
+    await expect(picker.getByRole("option")).toHaveText([
+      "🇬🇧 United Kingdom",
+      "🇧🇬 България / Bulgaria",
+    ]);
+    await expect(group(page, "free")).toContainText("BBC iPlayer");
+
+    await picker.selectOption("BG");
+    await expect(page.getByRole("heading", { name: "Where to watch in Bulgaria" })).toBeVisible();
+    await expect(group(page, "free")).toHaveCount(0);
+    await expect(group(page, "subscription")).toContainText("Netflix");
+
+    // The choice is remembered.
+    await page.goto("/");
+    await expect(page.getByLabel("Country")).toHaveValue("BG");
     await expect(
-      page.getByRole("heading", { name: "Where to watch in United States of America" }),
+      page.getByRole("heading", { name: "Popular to stream in Bulgaria" }),
     ).toBeVisible();
-    await expect(group(page, "subscription")).toContainText("Hulu");
-    await expect(group(page, "rentBuy")).toHaveCount(0);
+  });
+
+  test("visitors in Bulgaria start in Bulgaria, and their own choice wins", async ({ page }) => {
+    await page.setExtraHTTPHeaders({ "x-vercel-ip-country": "BG" });
+    await page.goto("/tv/136315");
+    await expect(page.getByLabel("Country")).toHaveValue("BG");
+    await expect(page.getByRole("heading", { name: "Where to watch in Bulgaria" })).toBeVisible();
+
+    await page.getByLabel("Country").selectOption("GB");
+    await expect(
+      page.getByRole("heading", { name: "Where to watch in United Kingdom" }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel("Country")).toHaveValue("GB");
+  });
+
+  test("visitors from unsupported countries get the default", async ({ page }) => {
+    await page.setExtraHTTPHeaders({ "x-vercel-ip-country": "FR" });
+    await page.goto("/");
+    await expect(page.getByLabel("Country")).toHaveValue("GB");
   });
 });
 

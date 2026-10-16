@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getFreeServices } from "@/lib/data/free-services";
 import { getRegion } from "@/lib/region";
-import { regionName } from "@/lib/regions";
+import { regionInfo } from "@/lib/region-shared";
 import { getMovie, getTv, getWatchProviders, TmdbError } from "@/lib/tmdb";
 import type { MediaType, RegionProviders } from "@/lib/tmdb/schemas";
 import { Poster } from "./poster";
@@ -71,11 +71,11 @@ async function loadProviders(mediaType: MediaType, id: number, region: string) {
 
 export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: number }) {
   const region = await getRegion();
-  const [info, { providers, failed }, name] = await Promise.all([
+  const [info, { providers, failed }] = await Promise.all([
     loadTitle(mediaType, id),
     loadProviders(mediaType, id, region),
-    regionName(region),
   ]);
+  const { name } = regionInfo(region);
   const free = getFreeServices(region);
 
   return (

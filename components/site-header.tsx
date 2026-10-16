@@ -1,20 +1,9 @@
 import Link from "next/link";
-import { getRegions } from "@/lib/tmdb";
 import { getRegion } from "@/lib/region";
 import { RegionSwitcher } from "./region-switcher";
 
-async function loadRegions(current: string) {
-  try {
-    return await getRegions();
-  } catch {
-    // TMDB unavailable: still let the page render with the current region.
-    return [{ code: current, name: current }];
-  }
-}
-
 export async function SiteHeader() {
   const region = await getRegion();
-  const regions = await loadRegions(region);
 
   return (
     <header className="border-border bg-surface border-b">
@@ -33,7 +22,7 @@ export async function SiteHeader() {
             About
           </Link>
         </nav>
-        <RegionSwitcher current={region} regions={regions} />
+        <RegionSwitcher current={region} />
       </div>
     </header>
   );
