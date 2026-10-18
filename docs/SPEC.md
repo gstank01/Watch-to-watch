@@ -78,7 +78,7 @@ This spec is written for an AI coding agent (Claude Code) to build the project i
 | Framework | Next.js (App Router), TypeScript, React Server Components |
 | Styling | Tailwind CSS; accessible, responsive, light/dark mode |
 | Database | PostgreSQL via Prisma |
-| Auth | ~~Auth.js (NextAuth)~~ **Better Auth** magic-link plugin *(changed: Auth.js is now maintained by the Better Auth team, who recommend Better Auth for new projects; Auth.js v5 never left beta. Same design: email magic link, no passwords.)* |
+| Auth | ~~Auth.js (NextAuth)~~ **Better Auth** magic-link plugin *(changed: Auth.js is now maintained by the Better Auth team, who recommend Better Auth for new projects; Auth.js v5 never left beta. Same design: email magic link, no passwords.)* **"Continue with Google"** added (owner decision, 18 Oct 2026): works without a domain of our own; requests only the `openid email` scopes and keeps no name, photo or Google tokens. Email links switch on once a domain is verified in Resend. |
 | Email | Resend (abstract behind an `EmailSender` interface so it can be swapped) |
 | Scheduled jobs | Vercel Cron hitting protected API routes (secret header) |
 | Data source | TMDB API v3 (search, details, discover, watch providers) |
@@ -350,6 +350,7 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 
 > **Progress (built early, at the owner's request):** Postgres + Prisma, magic-link sign-in, settings with sign out and account deletion, and My list + services saved to the account and synced across devices (first sign-in merges the browser's data; then the account is the source of truth). Still to do: region and email-alert settings, trial records, reminder cron and emails.
 - Postgres + Prisma, Auth.js magic link, settings, account deletion.
+- Sign in with Google and/or an emailed link (at least one configured).
 - Sync localStorage services and My list (favourites + watch status) into the account on first sign-in.
 - Watchlist, dashboard, trial records, trial reminder cron + emails with one-click status links.
 

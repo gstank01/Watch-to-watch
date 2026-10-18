@@ -7,13 +7,15 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { getEmailSender } from "@/lib/email";
 import { signInEmail } from "@/lib/email/templates";
-import { accountsStatus } from "./status";
+import { minimalUser, withoutProviderTokens } from "./privacy";
+import { accountsStatus, signInMethods } from "./status";
 
 export const MAGIC_LINK_MINUTES = 15;
 
 function createAuth() {
-  const sender = getEmailSender()!;
-  const testing = sender.kind === "outbox";
+  const methods = signInMethods();
+  const sender = getEmailSender();
+  const testing = sender?.kind === "outbox";
   return betterAuth({
     appName: "WhatToWatch",
     secret: process.env.AUTH_SECRET,
@@ -27,23 +29,54 @@ function createAuth() {
     },
     // Rate limiting is on in every environment; the e2e outbox gets a looser limit.
     rateLimit: { enabled: true, window: 60, max: testing ? 1000 : 100 },
+    socialProviders: methods.google
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            // Ask Google for the email address only: no name, photo or anything else.
+            disableDefaultScope: true,
+            scope: ["openid", "email"],
+            prompt: "select_account", // shared computers: always ask which account
+            mapProfileToUser: () => ({ name: "", image: undefined }),
+          },
+        }
+      : undefined,
+    account: {
+      // Someone who used an email link and later Google (same verified address) gets one account.
+      accountLinking: { enabled: true, trustedProviders: ["google"] },
+    },
+    // Privacy: we collect email, region, services and lists only (spec §9).
     databaseHooks: {
+      user: {
+        create: { before: async (user) => ({ data: minimalUser(user) }) },
+        update: { before: async (user) => ({ data: { ...user, name: "", image: null } }) },
+      },
+      account: {
+        create: { before: async (account) => ({ data: withoutProviderTokens(account) }) },
+        update: { before: async (account) => ({ data: withoutProviderTokens(account) }) },
+      },
       session: {
         create: {
-          // Privacy: we collect email, region, services and lists only (spec §9).
           before: async (session) => ({ data: { ...session, ipAddress: null, userAgent: null } }),
         },
       },
     },
     plugins: [
-      magicLink({
-        expiresIn: MAGIC_LINK_MINUTES * 60,
-        storeToken: "hashed",
-        rateLimit: { window: 60, max: testing ? 1000 : 5 },
-        sendMagicLink: async ({ email, url }) => {
-          await sender.send(signInEmail({ to: email, url, expiresInMinutes: MAGIC_LINK_MINUTES }));
-        },
-      }),
+      ...(sender
+        ? [
+            magicLink({
+              expiresIn: MAGIC_LINK_MINUTES * 60,
+              storeToken: "hashed",
+              rateLimit: { window: 60, max: testing ? 1000 : 5 },
+              sendMagicLink: async ({ email, url }) => {
+                await sender.send(
+                  signInEmail({ to: email, url, expiresInMinutes: MAGIC_LINK_MINUTES }),
+                );
+              },
+            }),
+          ]
+        : []),
       nextCookies(),
     ],
   });

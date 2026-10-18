@@ -63,8 +63,9 @@ export default function AboutPage() {
           </li>
           <li>
             With an account, we store your email address, your services and your list, so they
-            follow you to other devices. We use your email only to send sign-in links. We don&apos;t
-            record your IP address or browser.
+            follow you to other devices. We use your email only to sign you in. If you sign in with
+            Google, Google tells us your email address and nothing else: not your name, photo or
+            contacts. We don&apos;t record your IP address or browser.
           </li>
           <li>
             Signing in sets one cookie to keep you signed in. Signing out removes your list from

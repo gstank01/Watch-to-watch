@@ -103,6 +103,33 @@ test.describe("Accounts", () => {
     await expectAccountList(page, []);
   });
 
+  test("Continue with Google asks Google for the email address only", async ({ page }) => {
+    // Google can't be reached from tests: catch the hand-off and check what we ask for.
+    let googleUrl: URL | undefined;
+    await page.route("https://accounts.google.com/**", (route) => {
+      googleUrl = new URL(route.request().url());
+      return route.fulfill({ contentType: "text/html", body: "<h1>Google</h1>" });
+    });
+    await page.goto("/sign-in");
+    await expect(page.getByLabel("Email address")).toBeVisible(); // both methods offered
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+    await expect(page.getByRole("heading", { name: "Google" })).toBeVisible();
+
+    const params = googleUrl!.searchParams;
+    expect(googleUrl!.pathname).toMatch(/\/o\/oauth2\/.*auth/);
+    expect(params.get("client_id")).toBe("e2e-client.apps.googleusercontent.com");
+    expect(params.get("redirect_uri")).toBe("http://localhost:3100/api/auth/callback/google");
+    expect(params.get("scope")?.split(" ").sort()).toEqual(["email", "openid"]);
+    expect(params.get("prompt")).toBe("select_account");
+    expect(params.get("state")).toBeTruthy(); // protects the round trip
+  });
+
+  test("a Google sign-in that didn't finish says so", async ({ page }) => {
+    await page.goto("/sign-in?failed=google&error=access_denied");
+    await expect(page.getByText("Signing in with Google didn't finish")).toBeVisible();
+    await expect(page.getByText(/expired or was already used/)).toHaveCount(0);
+  });
+
   test("an expired or used link explains what to do", async ({ page }) => {
     await page.goto(
       "/api/auth/magic-link/verify?token=not-a-real-token&callbackURL=%2Fmy-list&errorCallbackURL=%2Fsign-in%3Flink%3Dinvalid",

@@ -72,6 +72,9 @@ export default defineConfig({
           AUTH_SECRET: "e2e-only-secret-0123456789abcdef0123456789",
           AUTH_URL: `http://localhost:${PORT}`,
           EMAIL_TEST_OUTBOX: EMAIL_OUTBOX,
+          // Fake credentials: tests stop at the hand-off to Google.
+          GOOGLE_CLIENT_ID: "e2e-client.apps.googleusercontent.com",
+          GOOGLE_CLIENT_SECRET: "e2e-secret",
         }),
       },
       reuseExistingServer: !process.env.CI,
@@ -88,6 +91,8 @@ export default defineConfig({
         AUTH_SECRET: "",
         AUTH_URL: "",
         EMAIL_TEST_OUTBOX: "",
+        GOOGLE_CLIENT_ID: "",
+        GOOGLE_CLIENT_SECRET: "",
       },
       reuseExistingServer: !process.env.CI,
     },

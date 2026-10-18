@@ -32,7 +32,7 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
   page, with a tab per list. A title can be a favourite and have one watch status
   (`lib/library/model.ts`).
-- **Accounts (optional)**: sign in with an emailed link, no password (`/sign-in`). My list and
+- **Accounts (optional)**: "Continue with Google" and/or an emailed link, no password (`/sign-in`). My list and
   services are saved to the account and follow you to every device; `/settings` has sign out
   and immediate account deletion. Without accounts configured, everything is saved in the
   browser only.
@@ -88,32 +88,41 @@ Every page needs TMDB. If none of them show data, the page and the server log sa
 
 ### Environment variables
 
-| Name                           | Needed for | Purpose                                                                |
-| ------------------------------ | ---------- | ---------------------------------------------------------------------- |
-| `TMDB_API_TOKEN`               | Everything | TMDB bearer token. Server-side only.                                   |
-| `DEFAULT_REGION`               | Optional   | Region for visitors outside a supported country. `GB` or `BG`.         |
-| `DATABASE_URL`                 | Accounts   | Postgres connection string (Neon or Supabase).                         |
-| `AUTH_SECRET`                  | Accounts   | 32+ random characters: `openssl rand -base64 32`.                      |
-| `AUTH_URL`                     | Accounts   | The site's public address, e.g. `https://your-app.vercel.app`.         |
-| `RESEND_API_KEY`, `EMAIL_FROM` | Accounts   | Sends sign-in links. In `npm run dev` without them, links are printed. |
-| `TMDB_API_BASE_URL`            | Tests      | Overrides the TMDB base URL (the e2e tests point it at the mock).      |
-| `CRON_SECRET`                  | Later      | Bearer secret for cron routes (M4 trial reminders, M5 alerts).         |
+| Name                                       | Needed for | Purpose                                                                                        |
+| ------------------------------------------ | ---------- | ---------------------------------------------------------------------------------------------- |
+| `TMDB_API_TOKEN`                           | Everything | TMDB bearer token. Server-side only.                                                           |
+| `DEFAULT_REGION`                           | Optional   | Region for visitors outside a supported country. `GB` or `BG`.                                 |
+| `DATABASE_URL`                             | Accounts   | Postgres connection string (Neon or Supabase).                                                 |
+| `AUTH_SECRET`                              | Accounts   | 32+ random characters: `openssl rand -base64 32`.                                              |
+| `AUTH_URL`                                 | Accounts   | The site's public address, e.g. `https://your-app.vercel.app`.                                 |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Accounts   | "Continue with Google". Needs no domain or email service.                                      |
+| `RESEND_API_KEY`, `EMAIL_FROM`             | Accounts   | Sends sign-in links (needs your own domain). In `npm run dev` without them, links are printed. |
+| `TMDB_API_BASE_URL`                        | Tests      | Overrides the TMDB base URL (the e2e tests point it at the mock).                              |
+| `CRON_SECRET`                              | Later      | Bearer secret for cron routes (M4 trial reminders, M5 alerts).                                 |
 
 ### Turning on accounts
 
-Accounts switch on when all of `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL` and email are set. Until
-then the header has no "Sign in" link and `/sign-in` says what's missing.
+Accounts switch on when `DATABASE_URL`, `AUTH_SECRET` and `AUTH_URL` are set, plus at least one way
+to sign in: **Google** or **email links**. Until then the header has no "Sign in" link and
+`/sign-in` says what's missing.
 
 1. **Database:** create a free Postgres database at [Neon](https://neon.tech) (or Supabase) and
    copy its connection string into `DATABASE_URL`.
 2. **Create the tables:** `npm run db:deploy` (on Vercel this runs automatically on each deploy).
 3. **Secret and address:** set `AUTH_SECRET` (`openssl rand -base64 32`) and `AUTH_URL` to the
    site's address (`http://localhost:3000` locally).
-4. **Email:** create a [Resend](https://resend.com) account and verify a domain you own, then set
-   `RESEND_API_KEY` and `EMAIL_FROM` (e.g. `WhatToWatch <signin@your-domain.com>`). Without a
-   verified domain, Resend only delivers to your own address. Locally you can skip this step:
-   `npm run dev` prints sign-in links in the terminal.
-5. Restart the app (or redeploy on Vercel). "Sign in" appears in the header.
+4. **Continue with Google** (works on a `.vercel.app` address, no domain needed): in
+   [Google Cloud Console](https://console.cloud.google.com/) create an OAuth client of type
+   "Web application" with the redirect URI `<AUTH_URL>/api/auth/callback/google`, then set
+   `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. We request only the `openid` and `email` scopes
+   and keep no name, photo or Google tokens (`lib/auth/privacy.ts`).
+5. **Email links** (optional; needs a domain you own): create a [Resend](https://resend.com)
+   account, verify the domain, then set `RESEND_API_KEY` and `EMAIL_FROM` (e.g.
+   `WhatToWatch <signin@your-domain.com>`). Locally, `npm run dev` prints sign-in links in the
+   terminal instead, so you can try email links without Resend.
+6. Restart the app (or redeploy on Vercel). "Sign in" appears in the header.
+
+If someone has used both, an email link and Google with the same address end up in one account.
 
 ## Scripts
 
