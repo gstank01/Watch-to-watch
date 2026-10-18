@@ -68,6 +68,12 @@ export default function AboutPage() {
             contacts. We don&apos;t record your IP address or browser.
           </li>
           <li>
+            The service check-up counts the days you press &ldquo;Watch on&rdquo; for one of your
+            services, or tap &ldquo;I used it today&rdquo;, plus any prices you enter. That stays in
+            your browser, even when you&apos;re signed in: we never receive it. You can forget it or
+            turn counting off on the My services page, and signing out clears it.
+          </li>
+          <li>
             Your star ratings are private. We only ever show a title&apos;s average from signed-in
             users, and only once it has at least 3 ratings, so no one can tell what you gave.
           </li>

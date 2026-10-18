@@ -29,6 +29,12 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - "Watch on …" buttons go straight to each service (its own search for the title, or its home
   page) using `data/provider-links.yaml`; TMDB's page is only a fallback.
 - "My services" picker (`/services`).
+- **Service check-up** (top of `/services`): for each of your services, a suggestion to keep it
+  or pause it, with the reasons. It uses how many days you used the service (a day counts when
+  you press "Watch on" for one of your services, or tap "I used it today") and what's on your
+  Want to watch and Watching lists (`/api/availability` says where those stream). Add what you
+  pay to see the monthly total and what pausing could save. It waits two weeks before suggesting
+  a pause. The counted days and prices stay in that browser only (`lib/checkup/`).
 - **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
   page, with a tab per list. A title can be a favourite and have one watch status
   (`lib/library/model.ts`).
@@ -60,7 +66,8 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - **After that the account is the source of truth:** each visit loads the account's copy, so
   changes and removals made on other devices show up. Changes are saved locally at once and sent
   in the background; unsent changes wait and are retried (`lib/account/sync.ts`).
-- **Signing out** removes the list from that browser, so the next person doesn't see it.
+- **Signing out** removes the list from that browser, so the next person doesn't see it (and the
+  check-up's counted days, which aren't synced).
 - Privacy: we store the email address, services and list. Sessions don't record IP addresses or
   browsers. Account deletion is a hard delete of everything.
 
@@ -172,6 +179,7 @@ lib/tmdb/         Typed TMDB client, zod schemas, caching
 lib/availability/ Where-to-watch grouping
 lib/data/         Curated data loaders and schemas
 lib/services/     "My services" browser store
+lib/checkup/      Service check-up: counted days, keep/pause rules, list availability
 data/             Curated YAML data
 tests/unit        Vitest
 tests/e2e         Playwright

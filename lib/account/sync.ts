@@ -1,5 +1,6 @@
 "use client";
 
+import { clearUsage } from "@/lib/checkup/store";
 import { createLocalStore } from "@/lib/local-store";
 import type { Library, LibraryEntry } from "@/lib/library/model";
 import { onLibraryChange, readLibrary, replaceLibrary } from "@/lib/library/store";
@@ -158,6 +159,8 @@ export const hasUnsavedChanges = () => hasPending(pendingStore.read());
 export function clearLocalAccountData() {
   replaceLibrary({});
   replaceServices([]);
+  // Not account data, but it says which services were used here: don't leave it behind.
+  clearUsage();
   pendingStore.write(EMPTY_PENDING);
   syncedUser.write(null);
 }

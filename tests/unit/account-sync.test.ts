@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { startSync } from "@/lib/account/sync";
+import { clearLocalAccountData, startSync } from "@/lib/account/sync";
+import { readUsage, recordServiceUse } from "@/lib/checkup/store";
+import { EMPTY_USAGE } from "@/lib/checkup/usage";
 import { setStatus, type LibraryEntry, type LibraryTitle } from "@/lib/library/model";
 import { readLibrary, updateLibrary } from "@/lib/library/store";
 import { writeServices } from "@/lib/services/store";
@@ -100,5 +102,15 @@ describe("account sync", () => {
     stop = startSync("user-3");
     await settle();
     expect(readLibrary()).toEqual({});
+  });
+
+  it("forgets the list, services and counted service use on sign-out", () => {
+    updateLibrary((l) => setStatus(l, BEAR, "want"));
+    writeServices([8]);
+    recordServiceUse(8);
+    expect(readUsage().days).toHaveProperty("8");
+    clearLocalAccountData();
+    expect(readLibrary()).toEqual({});
+    expect(readUsage()).toEqual(EMPTY_USAGE);
   });
 });

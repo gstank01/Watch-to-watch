@@ -10,12 +10,14 @@ export type SupportedRegion = {
   /** Label in the country picker. */
   label: string;
   flag: string;
+  /** ISO 4217, for prices people enter (Bulgaria has used the euro since 2026). */
+  currency: "GBP" | "EUR";
 };
 
 /** Countries the app supports. Add a region here, then add its curated data in data/. */
 export const SUPPORTED_REGIONS: readonly SupportedRegion[] = [
-  { code: "GB", name: "United Kingdom", label: "United Kingdom", flag: "🇬🇧" },
-  { code: "BG", name: "Bulgaria", label: "България / Bulgaria", flag: "🇧🇬" },
+  { code: "GB", name: "United Kingdom", label: "United Kingdom", flag: "🇬🇧", currency: "GBP" },
+  { code: "BG", name: "Bulgaria", label: "България / Bulgaria", flag: "🇧🇬", currency: "EUR" },
 ];
 
 export const SUPPORTED_REGION_CODES = SUPPORTED_REGIONS.map((r) => r.code);

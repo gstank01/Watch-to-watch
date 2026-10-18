@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { groupProviders, type GroupedProvider, type ProviderGroup } from "@/lib/availability/group";
 import type { WatchLink } from "@/lib/availability/links";
+import { recordServiceUse } from "@/lib/checkup/store";
 import { useMyServices } from "@/lib/services/store";
 import type { MonetizationType, RegionProviders } from "@/lib/tmdb/schemas";
 import { ProviderLogo } from "./provider-logo";
@@ -148,6 +149,7 @@ function ProviderList({
           tmdbLink={tmdbLink}
           note={freeNotes[p.id]}
           isFree={freeIds.includes(p.id)}
+          countsAsUse={group.key === "mine"}
         />
       ))}
     </ul>
@@ -161,6 +163,7 @@ function ProviderRow({
   tmdbLink,
   note,
   isFree,
+  countsAsUse,
 }: {
   provider: GroupedProvider;
   title: string;
@@ -169,6 +172,8 @@ function ProviderRow({
   note?: string;
   /** Listed in free-services.yaml: TMDB's "flatrate" really means free here. */
   isFree: boolean;
+  /** One of the visitor's services: pressing the button counts as using it (service check-up). */
+  countsAsUse: boolean;
 }) {
   const offers = [
     ...new Set(provider.offers.map((o) => (isFree && o === "flatrate" ? "Free" : OFFER_LABELS[o]))),
@@ -202,6 +207,11 @@ function ProviderRow({
           href={button.href}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={countsAsUse ? () => recordServiceUse(provider.id) : undefined}
+          // Middle-click opens a tab too; right-click (button 2) doesn't count.
+          onAuxClick={
+            countsAsUse ? (e) => e.button === 1 && recordServiceUse(provider.id) : undefined
+          }
           className="border-border bg-surface hover:bg-surface-2 rounded-lg border px-3 py-2 text-sm font-medium"
         >
           {button.label}

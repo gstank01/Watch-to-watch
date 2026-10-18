@@ -13,6 +13,8 @@
   --accent-soft: #e7e7fb;
   --free: #146c43;
   --free-soft: #e1f3ea;
+  --warn: #8a4b00;
+  --warn-soft: #fdf0dc;
   --focus: #3b3bc4;
   color-scheme: light;
 }
@@ -30,6 +32,8 @@
     --accent-soft: #24264a;
     --free: #6fd6a2;
     --free-soft: #15301f;
+    --warn: #f0b45c;
+    --warn-soft: #33260f;
     --focus: #a5a8ff;
     color-scheme: dark;
   }
@@ -47,6 +51,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-free: var(--free);
   --color-free-soft: var(--free-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }

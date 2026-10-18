@@ -377,6 +377,8 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 
 - **Star ratings** (2026-10-18): 1-5 stars per title, on the title page and My list cards; stored with the My list entry, so it syncs like the rest. The title page shows "TMDB x/10 · WhatToWatch ★ y/5 from n ratings": the average of signed-in users' ratings (one per account), shown only at 3 or more ratings so no individual rating can be inferred. Ratings from people who aren't signed in stay in their browser and don't count.
 
+- **Service check-up** (2026-10-18): at the top of `/services`, one card per ticked service with a suggestion (Keep it / Keep for now / Light use / Watch X, then pause it / Use it or pause it / Consider pausing / Too early to tell; free services: nothing to cancel) and the reasons behind it. Inputs: days the service was used in the last 30 (a day counts when the visitor presses "Watch on" for one of their services, or taps "I used it today"), Want to watch and Watching titles that stream there and nowhere else they have or for free (`GET /api/availability`), and an optional monthly price per service for the total and possible savings. No pause suggestion until 14 days of counting, unless the service is clearly used. Rules in `lib/checkup/verdict.ts`. Counted days and prices are kept in the browser only (`wtw:usage:v1`, 90 days of history), can be forgotten or turned off, and are cleared on sign-out. Clicks are a lower bound: watching on a TV app isn't seen unless the visitor taps "I used it today".
+
 ## 13. Future work
 
 Ideas the owner has looked at and set aside for now. Don't build these without a new decision.

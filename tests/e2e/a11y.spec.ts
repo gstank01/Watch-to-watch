@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { seedCheckup } from "./seed";
 
 const PAGES = [
   "/",
@@ -39,6 +40,18 @@ for (const scheme of ["light", "dark"] as const) {
       });
       await page.goto("/my-list?list=watching");
       await expect(page.getByRole("list", { name: "Watching" })).toContainText("The Bear");
+      await expectNoViolations(page);
+    });
+
+    test("a filled-in service check-up has no WCAG 2.2 AA violations", async ({ page }) => {
+      await seedCheckup(page);
+      await page.goto("/services");
+      await expect(page.getByTestId("summary")).toBeVisible();
+      // Include an error message.
+      const price = page.getByLabel("What you pay a month for Netflix");
+      await price.fill("abc");
+      await price.press("Tab");
+      await expect(page.getByText("Enter an amount like 10.99.")).toBeVisible();
       await expectNoViolations(page);
     });
   });
