@@ -34,3 +34,12 @@ export function accountsStatus(): AccountsStatus {
   }
   return missing.length ? { enabled: false, missing } : { enabled: true, methods };
 }
+
+/** The site's address from AUTH_URL; sign-in only works there. */
+export function siteUrl(): URL | null {
+  try {
+    return process.env.AUTH_URL ? new URL(process.env.AUTH_URL) : null;
+  } catch {
+    return null;
+  }
+}

@@ -124,6 +124,28 @@ test.describe("Accounts", () => {
     expect(params.get("state")).toBeTruthy(); // protects the round trip
   });
 
+  test("sign-in at another address points to the main one", async ({ page }) => {
+    // AUTH_URL is http://localhost:3100; the same server reached as 127.0.0.1 is "another address".
+    await page.goto("http://127.0.0.1:3100/sign-in");
+    await expect(page.getByText("Sign-in works at the site's main address")).toBeVisible();
+    await expect(page.getByRole("link", { name: "localhost:3100" })).toHaveAttribute(
+      "href",
+      "http://localhost:3100/sign-in",
+    );
+    await expect(page.getByRole("button", { name: "Continue with Google" })).toHaveCount(0);
+  });
+
+  test("a refused Google start explains why instead of blaming Google", async ({ page }) => {
+    await page.route("**/api/auth/sign-in/social", (route) =>
+      route.fulfill({ status: 403, json: { message: "Invalid origin", code: "INVALID_ORIGIN" } }),
+    );
+    await page.goto("/sign-in");
+    await page.getByRole("button", { name: "Continue with Google" }).click();
+    await expect(
+      page.getByText("Sign-in only works at the site's main address, http://localhost:3100"),
+    ).toBeVisible();
+  });
+
   test("a Google sign-in that didn't finish says so", async ({ page }) => {
     await page.goto("/sign-in?failed=google&error=access_denied");
     await expect(page.getByText("Signing in with Google didn't finish")).toBeVisible();

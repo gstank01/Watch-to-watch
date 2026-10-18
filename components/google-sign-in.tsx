@@ -27,9 +27,22 @@ function GoogleMark() {
   );
 }
 
-export function GoogleSignIn() {
+type StartError = { status?: number; code?: string; message?: string };
+
+/** Says why sign-in didn't start, so the visitor (or site owner) knows what to do. */
+export function explainStartError(err: StartError, siteOrigin: string, pageOrigin: string) {
+  if (err.code === "INVALID_ORIGIN") {
+    return `Sign-in only works at the site's main address, ${siteOrigin}, but this page is at ${pageOrigin}. Open the main address and try again. (Site owner: check AUTH_URL.)`;
+  }
+  if (err.status === 429) return "Too many attempts. Please wait a minute and try again.";
+  if (!err.status) return "We couldn't reach our server. Check your connection and try again.";
+  const detail = [err.code ?? err.status, err.message].filter(Boolean).join(": ");
+  return `Sign-in couldn't start (${detail}). Please try again.`;
+}
+
+export function GoogleSignIn({ siteOrigin }: { siteOrigin: string }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div className="space-y-2">
@@ -38,7 +51,7 @@ export function GoogleSignIn() {
         disabled={busy}
         onClick={async () => {
           setBusy(true);
-          setError(false);
+          setError(null);
           // On success this navigates away to Google.
           const { error } = await authClient.signIn.social({
             provider: "google",
@@ -48,7 +61,7 @@ export function GoogleSignIn() {
             errorCallbackURL: "/sign-in?failed=google",
           });
           if (error) {
-            setError(true);
+            setError(explainStartError(error, siteOrigin, window.location.origin));
             setBusy(false);
           }
         }}
@@ -59,7 +72,7 @@ export function GoogleSignIn() {
       </button>
       {error && (
         <p role="alert" className="text-sm font-medium">
-          We couldn&apos;t reach Google. Please try again.
+          {error}
         </p>
       )}
     </div>
