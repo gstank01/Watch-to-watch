@@ -107,7 +107,9 @@ to sign in: **Google** or **email links**. Until then the header has no "Sign in
 `/sign-in` says what's missing.
 
 1. **Database:** create a free Postgres database at [Neon](https://neon.tech) (or Supabase) and
-   copy its connection string into `DATABASE_URL`.
+   copy its connection string into `DATABASE_URL`: only the part starting with `postgresql://`
+   (not the `psql '…'` command). Neon's pooled address (`…-pooler…`) is fine: migrations switch to
+   the direct address automatically (or set `DATABASE_URL_UNPOOLED`).
 2. **Create the tables:** `npm run db:deploy` (on Vercel this runs automatically on each deploy).
 3. **Secret and address:** set `AUTH_SECRET` (`openssl rand -base64 32`) and `AUTH_URL` to the
    site's address (`http://localhost:3000` locally).
