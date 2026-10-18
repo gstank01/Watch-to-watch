@@ -198,7 +198,8 @@ model WatchlistItem {
   tmdbId      Int
   mediaType   MediaType
   favourite   Boolean    @default(false)
-  status      WatchStatus?             // null = favourite only
+  status      WatchStatus?             // null = favourite or rating only
+  rating      Int?                     // the user's 1-5 stars (CHECK 1-5 in the migration)
   addedAt     DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -371,6 +372,10 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 4. ~~Should anonymous users be able to keep a watchlist in localStorage, or is the watchlist account-only?~~ **Decided: yes.** "My list" (favourites plus Want to watch / Watching / Watched) was added early, before M2, at the owner's request. It lives in localStorage (`wtw:library:v1`) and moves into the account in M4. Availability alerts (Flow E) still need an account.
 
 ---
+
+## 12a. Added outside the milestones (owner requests)
+
+- **Star ratings** (2026-10-18): 1-5 stars per title, on the title page and My list cards; stored with the My list entry, so it syncs like the rest. The title page shows "TMDB x/10 · WhatToWatch ★ y/5 from n ratings": the average of signed-in users' ratings (one per account), shown only at 3 or more ratings so no individual rating can be inferred. Ratings from people who aren't signed in stay in their browser and don't count.
 
 ## 13. Future work
 

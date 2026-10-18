@@ -25,6 +25,7 @@ export async function getLibrary(userId: string): Promise<LibraryEntry[]> {
     posterPath: r.posterPath,
     favourite: r.favourite,
     status: fromDbStatus(r.status),
+    rating: r.rating,
     updatedAt: r.updatedAt.toISOString(),
   }));
 }
@@ -51,7 +52,7 @@ export async function applyLibraryChanges(userId: string, changes: LibraryChange
       const where = {
         userId_mediaType_tmdbId: { userId, mediaType: toDbMedia(e.mediaType), tmdbId: e.id },
       };
-      if (!e.favourite && !e.status) {
+      if (!e.favourite && !e.status && e.rating === null) {
         if (found) await tx.watchlistItem.delete({ where });
         continue;
       }
@@ -61,6 +62,7 @@ export async function applyLibraryChanges(userId: string, changes: LibraryChange
         posterPath: e.posterPath,
         favourite: e.favourite,
         status: toDbStatus(e.status),
+        rating: e.rating,
         updatedAt,
       };
       await tx.watchlistItem.upsert({
@@ -80,6 +82,29 @@ export async function applyLibraryChanges(userId: string, changes: LibraryChange
       throw new LimitError(`My list is limited to ${LIMITS.perAccount} titles`);
     }
   });
+}
+
+/** A title needs this many ratings before its community score is shown. */
+export const MIN_COMMUNITY_RATINGS = 3;
+
+export type CommunityRating = { average: number; count: number };
+
+/**
+ * The average of signed-in users' ratings for a title, or null below
+ * MIN_COMMUNITY_RATINGS (one rating isn't a consensus, and with one or two
+ * anyone could work out what a person gave). Individual ratings are never shown.
+ */
+export async function communityRating(
+  mediaType: LibraryEntry["mediaType"],
+  tmdbId: number,
+): Promise<CommunityRating | null> {
+  const { _avg, _count } = await db().watchlistItem.aggregate({
+    where: { mediaType: toDbMedia(mediaType), tmdbId, rating: { not: null } },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  if (_count.rating < MIN_COMMUNITY_RATINGS || _avg.rating === null) return null;
+  return { average: Math.round(_avg.rating * 10) / 10, count: _count.rating };
 }
 
 export async function getServices(userId: string): Promise<number[]> {

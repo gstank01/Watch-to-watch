@@ -2,8 +2,10 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { getSessionUser, type SessionUser } from "@/lib/auth/server";
 import { clientKey, createRateLimiter } from "@/lib/rate-limit";
+import { isTestMode } from "@/lib/test-mode";
 
-const limiter = createRateLimiter({ limit: 120, windowMs: 60_000 });
+// 120 a minute per visitor; e2e tests all share one IP address.
+const limiter = createRateLimiter({ limit: isTestMode() ? 100_000 : 120, windowMs: 60_000 });
 
 /**
  * Checks an account API request: rate limit, then (for writes) same-origin JSON,

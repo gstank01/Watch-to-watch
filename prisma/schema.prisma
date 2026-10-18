@@ -86,7 +86,7 @@ model UserService {
   @@map("user_service")
 }
 
-/// One title in a user's My list: a favourite and/or one watch status.
+/// One title in a user's My list: a favourite, one watch status and/or a rating.
 model WatchlistItem {
   userId     String
   tmdbId     Int
@@ -97,12 +97,16 @@ model WatchlistItem {
   posterPath String?
   favourite  Boolean      @default(false)
   status     WatchStatus?
+  // The user's own 1-5 star rating (the migration also enforces the range).
+  rating     Int?
   addedAt    DateTime     @default(now())
   // When the user last changed it, set by the device that made the change.
   updatedAt  DateTime
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, mediaType, tmdbId])
+  // For a title's community rating across users.
+  @@index([mediaType, tmdbId])
   @@map("watchlist_item")
 }
 

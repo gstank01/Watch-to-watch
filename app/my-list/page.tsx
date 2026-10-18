@@ -13,8 +13,8 @@ export default async function MyListPage(props: PageProps<"/my-list">) {
       <header className="space-y-2">
         <h1 className="text-2xl font-bold">My list</h1>
         <p className="text-muted max-w-prose">
-          Your favourites and what you want to watch, are watching and have watched. Saved in this
-          browser only — we never see it.
+          Your favourites, ratings, and what you want to watch, are watching and have watched. Saved
+          in this browser, and in your account when you&apos;re signed in.
         </p>
       </header>
       <MyList list={list} />

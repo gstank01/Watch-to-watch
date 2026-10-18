@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { getEmailSender } from "@/lib/email";
 import { signInEmail } from "@/lib/email/templates";
 import { minimalUser, withoutProviderTokens } from "./privacy";
+import { isTestMode } from "@/lib/test-mode";
 import { accountsStatus, signInMethods } from "./status";
 
 export const MAGIC_LINK_MINUTES = 15;
@@ -15,7 +16,7 @@ export const MAGIC_LINK_MINUTES = 15;
 function createAuth() {
   const methods = signInMethods();
   const sender = getEmailSender();
-  const testing = sender?.kind === "outbox";
+  const testing = isTestMode();
   return betterAuth({
     appName: "WhatToWatch",
     secret: process.env.AUTH_SECRET,

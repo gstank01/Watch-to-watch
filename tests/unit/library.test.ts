@@ -4,6 +4,7 @@ import {
   listCounts,
   parseLibrary,
   removeTitle,
+  setRating,
   setStatus,
   titlesIn,
   toggleFavourite,
@@ -94,5 +95,53 @@ describe("library", () => {
       d: lib[libraryKey(PADDINGTON)],
     };
     expect(Object.keys(parseLibrary(JSON.stringify(bad)))).toEqual([libraryKey(PADDINGTON)]);
+  });
+});
+
+describe("ratings", () => {
+  it("rates a title 1-5 stars, independent of favourite and status", () => {
+    let lib = setRating({}, BEAR, 4, t(0));
+    expect(lib[libraryKey(BEAR)]).toMatchObject({ rating: 4, status: null, favourite: false });
+    lib = setStatus(lib, BEAR, "watched", t(1));
+    lib = setRating(lib, BEAR, 5, t(2));
+    expect(lib[libraryKey(BEAR)]).toMatchObject({ rating: 5, status: "watched" });
+    expect(titlesIn(lib, "watched").map((e) => e.rating)).toEqual([5]);
+  });
+
+  it("keeps a rated title even with no status or favourite, and drops it when cleared", () => {
+    let lib = setRating({}, BEAR, 3, t(0));
+    expect(Object.keys(lib)).toEqual([libraryKey(BEAR)]);
+    lib = setRating(lib, BEAR, null, t(1));
+    expect(lib).toEqual({});
+  });
+
+  it("keeps the rating when the status is cleared", () => {
+    let lib = setRating(setStatus({}, BEAR, "watching", t(0)), BEAR, 2, t(1));
+    lib = setStatus(lib, BEAR, null, t(2));
+    expect(lib[libraryKey(BEAR)]).toMatchObject({ rating: 2, status: null });
+  });
+
+  it("refuses ratings outside 1-5", () => {
+    for (const bad of [0, 6, 2.5, -1]) {
+      expect(() => setRating({}, BEAR, bad, t(0))).toThrow(RangeError);
+    }
+  });
+
+  it("reads lists saved before ratings existed", () => {
+    const legacy = {
+      "tv:136315": {
+        id: 136315,
+        mediaType: "tv",
+        title: "The Bear",
+        year: "2022",
+        posterPath: null,
+        favourite: true,
+        status: "watching",
+        updatedAt: "2026-10-16T10:00:00.000Z",
+      },
+    };
+    expect(parseLibrary(JSON.stringify(legacy))["tv:136315"]).toMatchObject({ rating: null });
+    const badRating = { "tv:136315": { ...legacy["tv:136315"], rating: 9 } };
+    expect(parseLibrary(JSON.stringify(badRating))).toEqual({});
   });
 });

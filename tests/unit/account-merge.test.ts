@@ -97,12 +97,19 @@ describe("validating changes sent to the server", () => {
   it("accepts real entries and rejects bad ones", () => {
     const entry = setStatus({}, BEAR, "want", at(0))["tv:136315"];
     expect(libraryChangesSchema.safeParse({ upsert: [entry], remove: [] }).success).toBe(true);
+    // A browser still running the version before ratings sends no `rating`.
+    const older: Partial<typeof entry> = { ...entry };
+    delete older.rating;
+    const parsed = libraryChangesSchema.parse({ upsert: [older], remove: [] });
+    expect(parsed.upsert[0].rating).toBeNull();
     for (const bad of [
       { ...entry, status: "binged" },
       { ...entry, id: 0 },
       { ...entry, posterPath: "https://evil.example/x.jpg" },
       { ...entry, updatedAt: "yesterday" },
       { ...entry, title: "" },
+      { ...entry, rating: 6 },
+      { ...entry, rating: 3.5 },
     ]) {
       expect(libraryChangesSchema.safeParse({ upsert: [bad], remove: [] }).success).toBe(false);
     }

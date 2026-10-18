@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { STATUSES } from "@/lib/library/model";
+import { MAX_RATING, MIN_RATING, STATUSES } from "@/lib/library/model";
 
 /** Upper bounds that keep one request (and one account) a sensible size. */
 export const LIMITS = { perRequest: 500, perAccount: 5000, services: 100 } as const;
@@ -19,6 +19,8 @@ export const libraryEntrySchema = titleRef.extend({
     .nullable(),
   favourite: z.boolean(),
   status: z.enum(STATUSES).nullable(),
+  // Older browsers' copies may not send it yet.
+  rating: z.number().int().min(MIN_RATING).max(MAX_RATING).nullable().default(null),
   updatedAt: z.iso.datetime(),
 });
 

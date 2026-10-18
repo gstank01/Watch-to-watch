@@ -11,6 +11,22 @@ import {
   WATCH_PROVIDERS,
 } from "./fixtures";
 
+/** Ids from here up are made-up films, so a test can use one nobody else touches. */
+export const THROWAWAY_FROM = 900_000;
+
+const throwawayMovie = (id: number) => ({
+  id,
+  title: `Test Film ${id}`,
+  tagline: "",
+  overview: "A film that exists only in tests.",
+  release_date: "2026-01-01",
+  runtime: 90,
+  poster_path: null,
+  backdrop_path: null,
+  vote_average: 6.5,
+  genres: [],
+});
+
 const page = <T>(results: T[]) => ({
   page: 1,
   results,
@@ -86,7 +102,8 @@ export const handlers = [
   http.get(
     "*/movie/:id",
     authed(({ params }) => {
-      const m = MOVIES[Number(params.id)];
+      const id = Number(params.id);
+      const m = MOVIES[id] ?? (id >= THROWAWAY_FROM ? throwawayMovie(id) : undefined);
       return m ? HttpResponse.json(m) : notFound();
     }),
   ),

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { watchLinkFor, type WatchLink } from "@/lib/availability/links";
+import { communityRating, type CommunityRating } from "@/lib/account/repo";
+import { accountsStatus } from "@/lib/auth/status";
 import { getFreeServices } from "@/lib/data/free-services";
 import { getProviderLinks } from "@/lib/data/provider-links";
 import { getRegion } from "@/lib/region";
@@ -9,6 +11,7 @@ import type { MediaType, RegionProviders } from "@/lib/tmdb/schemas";
 import { reportTmdbError } from "@/lib/tmdb/problem";
 import { DataProblem } from "./data-problem";
 import { Poster } from "./poster";
+import { StarRating } from "./star-rating";
 import { TitleActions } from "./title-actions";
 import { WhereToWatch } from "./where-to-watch";
 
@@ -91,6 +94,7 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
   const { info } = titleResult;
   if (!info) return <DataProblem message={titleResult.problem ?? ""} />;
   const { name } = regionInfo(region);
+  const community = await loadCommunityRating(mediaType, id);
   const free = getFreeServices(region);
   const links = getProviderLinks();
   const watchLinks: Record<number, WatchLink> = {};
@@ -100,6 +104,14 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
       if (link) watchLinks[p.provider_id] = link;
     }
   }
+
+  const libraryTitle = {
+    id,
+    mediaType,
+    title: info.title,
+    year: info.year,
+    posterPath: info.posterPath,
+  };
 
   return (
     <article className="grid gap-8 md:grid-cols-[240px_1fr]">
@@ -120,24 +132,12 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
           </h1>
           {info.tagline && <p className="text-muted text-lg italic">{info.tagline}</p>}
           <p className="text-muted text-sm">
-            {[
-              ...info.facts,
-              info.genres.join(", ") || null,
-              info.rating ? `★ ${info.rating.toFixed(1)}` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+            {[...info.facts, info.genres.join(", ") || null].filter(Boolean).join(" · ")}
           </p>
+          <Scores tmdb={info.rating} community={community} />
         </header>
-        <TitleActions
-          title={{
-            id,
-            mediaType,
-            title: info.title,
-            year: info.year,
-            posterPath: info.posterPath,
-          }}
-        />
+        <TitleActions title={libraryTitle} />
+        <StarRating title={libraryTitle} />
         {info.overview && <p className="max-w-prose leading-relaxed">{info.overview}</p>}
 
         {problem ? (
@@ -154,5 +154,50 @@ export async function TitlePage({ mediaType, id }: { mediaType: MediaType; id: n
         )}
       </div>
     </article>
+  );
+}
+
+/** `undefined` = no community score (accounts off, or the database is down). */
+async function loadCommunityRating(
+  mediaType: MediaType,
+  id: number,
+): Promise<CommunityRating | null | undefined> {
+  if (!accountsStatus().enabled) return undefined;
+  try {
+    return await communityRating(mediaType, id);
+  } catch (err) {
+    console.error(`[ratings] community rating ${mediaType}/${id}: ${(err as Error).message}`);
+    return undefined;
+  }
+}
+
+function Scores({
+  tmdb,
+  community,
+}: {
+  tmdb: number | null;
+  community: CommunityRating | null | undefined;
+}) {
+  const parts: React.ReactNode[] = [];
+  if (tmdb) parts.push(<span key="tmdb">TMDB {tmdb.toFixed(1)}/10</span>);
+  if (community) {
+    parts.push(
+      <span key="wtw" data-testid="community-rating">
+        WhatToWatch <span aria-hidden>★</span> {community.average.toFixed(1)}/5 from{" "}
+        {community.count} ratings
+      </span>,
+    );
+  } else if (community === null) {
+    parts.push(
+      <span key="wtw" data-testid="community-rating">
+        WhatToWatch: not enough ratings yet
+      </span>,
+    );
+  }
+  if (parts.length === 0) return null;
+  return (
+    <p className="text-sm">
+      {parts.flatMap((part, i) => (i === 0 ? [part] : [<span key={`sep-${i}`}> · </span>, part]))}
+    </p>
   );
 }

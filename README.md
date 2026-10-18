@@ -32,6 +32,10 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
   page, with a tab per list. A title can be a favourite and have one watch status
   (`lib/library/model.ts`).
+- **Ratings**: rate any film or show 1 to 5 stars on its page or from My list (keyboard and
+  screen-reader friendly). Title pages show TMDB's score and the WhatToWatch community score:
+  the average from signed-in users, one rating per account, shown once a title has at least 3
+  ratings. Individual ratings are never shown.
 - **Accounts (optional)**: "Continue with Google" and/or an emailed link, no password (`/sign-in`). My list and
   services are saved to the account and follow you to every device; `/settings` has sign out
   and immediate account deletion. Without accounts configured, everything is saved in the

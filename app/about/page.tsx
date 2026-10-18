@@ -68,6 +68,10 @@ export default function AboutPage() {
             contacts. We don&apos;t record your IP address or browser.
           </li>
           <li>
+            Your star ratings are private. We only ever show a title&apos;s average from signed-in
+            users, and only once it has at least 3 ratings, so no one can tell what you gave.
+          </li>
+          <li>
             Signing in sets one cookie to keep you signed in. Signing out removes your list from
             that browser.
           </li>

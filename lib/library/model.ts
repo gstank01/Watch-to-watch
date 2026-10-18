@@ -30,9 +30,18 @@ export type LibraryTitle = {
   posterPath: string | null;
 };
 
+export const MIN_RATING = 1;
+export const MAX_RATING = 5;
+
+/** A star rating, 1 to 5. */
+export const isRating = (v: unknown): v is number =>
+  Number.isInteger(v) && (v as number) >= MIN_RATING && (v as number) <= MAX_RATING;
+
 export type LibraryEntry = LibraryTitle & {
   favourite: boolean;
   status: WatchStatus | null;
+  /** The visitor's own rating, 1-5 stars; independent of the status. */
+  rating: number | null;
   /** ISO timestamp of the last change, for "most recent first". */
   updatedAt: string;
 };
@@ -58,9 +67,15 @@ function isEntry(v: unknown): v is LibraryEntry {
     (e.posterPath === null || typeof e.posterPath === "string") &&
     typeof e.favourite === "boolean" &&
     (e.status === null || STATUSES.includes(e.status as WatchStatus)) &&
+    // Saved before ratings existed: no `rating` at all.
+    (e.rating === undefined || e.rating === null || isRating(e.rating)) &&
     typeof e.updatedAt === "string"
   );
 }
+
+/** An entry is kept while it's a favourite, has a status or has a rating. */
+const isKept = (e: Pick<LibraryEntry, "favourite" | "status" | "rating">) =>
+  e.favourite || e.status !== null || e.rating !== null;
 
 /** Reads a stored library, dropping anything malformed. */
 export function parseLibrary(raw: string | null): Library {
@@ -70,7 +85,9 @@ export function parseLibrary(raw: string | null): Library {
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     const lib: Library = {};
     for (const entry of Object.values(value)) {
-      if (isEntry(entry) && (entry.favourite || entry.status)) lib[libraryKey(entry)] = entry;
+      if (!isEntry(entry)) continue;
+      const normalised = { ...entry, rating: entry.rating ?? null };
+      if (isKept(normalised)) lib[libraryKey(entry)] = normalised;
     }
     return lib;
   } catch {
@@ -95,6 +112,7 @@ function update(
     ...title,
     favourite: false,
     status: null,
+    rating: null,
     updatedAt: "",
   };
   // Refresh the stored title details too (title or poster may have changed on TMDB).
@@ -108,8 +126,8 @@ function update(
     ...change(current),
     updatedAt: now.toISOString(),
   };
-  // A title with no status and not a favourite isn't in the list any more.
-  return next.favourite || next.status ? { ...lib, [key]: next } : without(lib, key);
+  // A title with no status, no rating and not a favourite isn't in the list any more.
+  return isKept(next) ? { ...lib, [key]: next } : without(lib, key);
 }
 
 /** Sets the title's watch status; `null` takes it off the status lists. */
@@ -120,6 +138,18 @@ export function setStatus(
   now = new Date(),
 ): Library {
   return update(lib, title, () => ({ status }), now);
+}
+
+/** Rates the title 1-5 stars; `null` clears the rating. */
+export function setRating(
+  lib: Library,
+  title: LibraryTitle,
+  rating: number | null,
+  now = new Date(),
+): Library {
+  if (rating !== null && !isRating(rating))
+    throw new RangeError(`Rating must be 1-5, got ${rating}`);
+  return update(lib, title, () => ({ rating }), now);
 }
 
 export function toggleFavourite(lib: Library, title: LibraryTitle, now = new Date()): Library {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LISTS, listCounts, titlesIn, type ListKey } from "@/lib/library/model";
 import { useLibrary } from "@/lib/library/store";
+import { StarRating } from "./star-rating";
 import { TitleActions } from "./title-actions";
 import { TitleCard } from "./title-grid";
 
@@ -61,9 +62,13 @@ export function MyList({ list }: { list: ListKey }) {
           className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
         >
           {items.map((entry) => (
-            <TitleCard key={`${entry.mediaType}-${entry.id}`} title={entry}>
+            // The card's rating slot is for TMDB's score; your own stars sit below it.
+            <TitleCard key={`${entry.mediaType}-${entry.id}`} title={{ ...entry, rating: null }}>
               <div className="mt-2">
                 <TitleActions title={entry} compact onAnnounce={setMessage} />
+                <div className="mt-2">
+                  <StarRating title={entry} compact onAnnounce={setMessage} />
+                </div>
               </div>
             </TitleCard>
           ))}
