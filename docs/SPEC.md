@@ -368,3 +368,13 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 2. Which regions to support at launch: GB only, or all TMDB regions with trial data only for GB?
 3. Who maintains `trials.yaml` monthly, and should we accept community PRs from day one?
 4. ~~Should anonymous users be able to keep a watchlist in localStorage, or is the watchlist account-only?~~ **Decided: yes.** "My list" (favourites plus Want to watch / Watching / Watched) was added early, before M2, at the owner's request. It lives in localStorage (`wtw:library:v1`) and moves into the account in M4. Availability alerts (Flow E) still need an account.
+
+---
+
+## 13. Future work (shelved)
+
+Ideas the owner has looked at and set aside for now. Don't build these without a new decision.
+
+- **Find my subscriptions automatically** (shelved 2026-10-18). With the visitor's permission (e.g. Google sign-in plus read-only Gmail access), scan their inbox for recent receipts from streaming services, including Apple and Google billing receipts, and suggest the matches for My services. Only the services found would be kept, never the emails, and the visitor would confirm the matches first.
+  - Why shelved: Gmail read access is a restricted scope, so a public app needs Google's paid annual security assessment; until then it's limited to 100 named test users. It also changes the app's privacy promise.
+  - Ruled out: asking the services directly by email (no such API, and probing sign-up or reset pages would break their terms and let anyone check someone else's email); reading bank payments via Open Banking (too sensitive and regulated for this app).
