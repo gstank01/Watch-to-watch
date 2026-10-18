@@ -371,10 +371,15 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 
 ---
 
-## 13. Future work (shelved)
+## 13. Future work
 
 Ideas the owner has looked at and set aside for now. Don't build these without a new decision.
 
 - **Find my subscriptions automatically** (shelved 2026-10-18). With the visitor's permission (e.g. Google sign-in plus read-only Gmail access), scan their inbox for recent receipts from streaming services, including Apple and Google billing receipts, and suggest the matches for My services. Only the services found would be kept, never the emails, and the visitor would confirm the matches first.
   - Why shelved: Gmail read access is a restricted scope, so a public app needs Google's paid annual security assessment; until then it's limited to 100 named test users. It also changes the app's privacy promise.
   - Ruled out: asking the services directly by email (no such API, and probing sign-up or reset pages would break their terms and let anyone check someone else's email); reading bank payments via Open Banking (too sensitive and regulated for this app).
+- **Publish on Google Play** (not started; decide the web address first). Package the site as an Android app with a Trusted Web Activity (Google's Bubblewrap tool or PWABuilder): full screen, own icon, no address bar, same code, site updates reach the app at once.
+  - App work (about a day): web app manifest, Android icon sizes, an offline page, `/.well-known/assetlinks.json` for link verification (works on the `.vercel.app` address), a separate privacy policy page, the Android package.
+  - Owner work: Play developer account (one-off US$25, identity check); closed test with at least 12 testers for 14 consecutive days (required for new personal accounts); store listing, content rating, Data safety form.
+  - The app is tied to one web address, so pick the final domain before publishing.
+  - Changes the non-goal "no native mobile apps" (§1): a Trusted Web Activity is still the web app, but record the change when it's built.
