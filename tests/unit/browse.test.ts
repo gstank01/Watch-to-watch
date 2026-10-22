@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { browseHref, MAX_PAGE, parseBrowse } from "@/lib/browse";
-import { popularByService } from "@/lib/popular";
+import { newByService } from "@/lib/popular";
 import { setupTmdbMock } from "./msw";
 
-setupTmdbMock();
+const server = setupTmdbMock();
 
 describe("browse filters in the URL", () => {
   it("reads filters, ignoring anything odd", () => {
@@ -49,13 +49,30 @@ describe("browse filters in the URL", () => {
   });
 });
 
-describe("popular on each service", () => {
+describe("new on each service", () => {
   it("makes one row per service, in the order given", async () => {
-    const rows = await popularByService("GB", [337, 8]);
+    const rows = await newByService("GB", [337, 8]);
     expect(rows.map((r) => [r.providerId, r.titles.map((t) => t.title)])).toEqual([
       [337, ["The Bear"]],
       [8, ["Paddington"]],
     ]);
+  });
+
+  it("asks for the newest releases that are already out", async () => {
+    const seen: URL[] = [];
+    server.events.on("request:start", ({ request }) => {
+      seen.push(new URL(request.url));
+    });
+    await newByService("GB", [8]);
+    server.events.removeAllListeners();
+    const today = new Date().toISOString().slice(0, 10);
+    const film = seen.find((u) => u.pathname.endsWith("/discover/movie"))!.searchParams;
+    const series = seen.find((u) => u.pathname.endsWith("/discover/tv"))!.searchParams;
+    expect(film.get("sort_by")).toBe("primary_release_date.desc");
+    expect(film.get("primary_release_date.lte")).toBe(today);
+    expect(series.get("sort_by")).toBe("first_air_date.desc");
+    expect(series.get("first_air_date.lte")).toBe(today);
+    expect(film.get("with_watch_providers")).toBe("8");
   });
 });
 

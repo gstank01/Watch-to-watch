@@ -41,8 +41,9 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 - **Browse** (`/browse`, in the header): pick films or series, a category (TMDB's genres:
   Action, Comedy, Thriller…), where it streams (everything, free, or on my services) and a sort
   (popular, top rated, newest). Filters live in the URL (`lib/browse.ts`).
-- **Home page:** a "Popular on <service>" row for each of your services, leaving out what you've
-  marked Watched; ranked by TMDB popularity, not the services' own viewing figures.
+- **Home page:** a "New on <service>" row for each of your services: the newest releases you can
+  stream there (TMDB doesn't say when a service added an older title), leaving out what you've
+  marked Watched.
 - **My usage** (`/usage`, linked in the footer): days each service was used in each of the last
   three months, the monthly price, and the cost per day actually watched ("£10.99 ÷ 5 days =
   £2.20"), with totals for what you pay and what went unused this month.

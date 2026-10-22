@@ -11,7 +11,7 @@ import { TitleRow } from "./title-grid";
 
 type ServiceRow = { id: number; name: string; logoPath: string | null; titles: TitleSummary[] };
 
-/** "Pick your services" prompt, or a "Popular on <service>" row for each of the visitor's services. */
+/** "Pick your services" prompt, or a "New on <service>" row for each of the visitor's services. */
 export function HomePersonal() {
   const services = useMyServices();
   const library = useLibrary();
@@ -39,8 +39,8 @@ export function HomePersonal() {
         <div>
           <h2 className="text-lg font-semibold">Which services do you already have?</h2>
           <p className="text-muted">
-            Tick them once and we&apos;ll show what&apos;s popular on each of them, and put them
-            first everywhere.
+            Tick them once and we&apos;ll show what&apos;s new on each of them, and put them first
+            everywhere.
           </p>
         </div>
         <Link
@@ -62,7 +62,7 @@ export function HomePersonal() {
     <section aria-labelledby="on-my-services" className="space-y-6">
       <div className="flex items-baseline justify-between">
         <h2 id="on-my-services" className="text-xl font-semibold">
-          Popular on your services
+          New on your services
         </h2>
         <Link href="/services" className="text-accent text-sm underline">
           Edit services
@@ -71,7 +71,7 @@ export function HomePersonal() {
       {loaded === null ? (
         <p className="text-muted">Loading…</p>
       ) : loaded.rows === null ? (
-        <p className="text-muted">We couldn&apos;t load what&apos;s popular right now.</p>
+        <p className="text-muted">We couldn&apos;t load what&apos;s new right now.</p>
       ) : (
         loaded.rows.map((row) => {
           const titles = unwatched(row.titles);
@@ -82,10 +82,10 @@ export function HomePersonal() {
                 className="flex items-center gap-2 text-lg font-semibold"
               >
                 <ProviderLogo path={row.logoPath} name={row.name} size={28} />
-                Popular on {row.name}
+                New on {row.name}
               </h3>
               {titles.length ? (
-                <TitleRow titles={titles} label={`Popular on ${row.name}`} />
+                <TitleRow titles={titles} label={`New on ${row.name}`} />
               ) : (
                 <p className="text-muted text-sm">Nothing new to show on {row.name} right now.</p>
               )}
@@ -94,8 +94,8 @@ export function HomePersonal() {
         })
       )}
       <p className="text-muted text-xs">
-        Ranked by popularity on TMDB in recent days: a guide to what people are watching, not the
-        services&apos; own viewing figures.
+        The newest releases you can stream on each service, newest first. Services don&apos;t share
+        when they add older titles, so those don&apos;t show here.
       </p>
     </section>
   );

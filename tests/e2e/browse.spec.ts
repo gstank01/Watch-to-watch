@@ -63,17 +63,13 @@ test.describe("Browse", () => {
 });
 
 test.describe("Home page", () => {
-  test("a popular row per service, leaving out what you've watched", async ({ page }) => {
+  test("a 'New on' row per service, leaving out what you've watched", async ({ page }) => {
     await page.goto("/services");
     await page.getByRole("checkbox", { name: "Netflix" }).check();
     await page.getByRole("checkbox", { name: "Disney Plus" }).check();
     await page.goto("/");
-    await expect(page.getByRole("list", { name: "Popular on Netflix" })).toContainText(
-      "Paddington",
-    );
-    await expect(page.getByRole("list", { name: "Popular on Disney Plus" })).toContainText(
-      "The Bear",
-    );
+    await expect(page.getByRole("list", { name: "New on Netflix" })).toContainText("Paddington");
+    await expect(page.getByRole("list", { name: "New on Disney Plus" })).toContainText("The Bear");
 
     await page.goto("/movie/116149");
     await page

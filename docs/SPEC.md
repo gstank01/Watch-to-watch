@@ -337,7 +337,7 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 
 ### M2: Browse
 
-> **Progress (2026-10-22):** `/browse` with films/series, TMDB genre as the category, where it streams (everything / free / my services, the visitor's services carried in the URL), sort (popular / top rated with 200+ votes / newest), URL-synced filters and pages. Home page rows "Popular on <service>" per selected service (TMDB popularity; Watched titles hidden). Still to do: moods (`data/moods.ts`), max runtime, provider logos on results.
+> **Progress (2026-10-22):** `/browse` with films/series, TMDB genre as the category, where it streams (everything / free / my services, the visitor's services carried in the URL), sort (popular / top rated with 200+ votes / newest), URL-synced filters and pages. Home page rows "New on <service>" per selected service: newest releases already out that stream there (TMDB has no date a title joined a service), at least 10 votes, Watched titles hidden. "Newest" in Browse also excludes future releases. Still to do: moods (`data/moods.ts`), max runtime, provider logos on results.
 - `/browse` with mood, media type, runtime, "my services only", "free only", sort; URL-synced filters; infinite scroll or pagination.
 
 **Accept when:** "Make me laugh + under 90 min + my services only" returns only matching titles available on the selected services.

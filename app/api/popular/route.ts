@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { popularByService, popularStreaming } from "@/lib/popular";
+import { newByService, popularStreaming } from "@/lib/popular";
 import { clientKey, createRateLimiter } from "@/lib/rate-limit";
 import { getRegion } from "@/lib/region";
 import { getProviders } from "@/lib/tmdb";
@@ -9,7 +9,7 @@ const limiter = createRateLimiter({ limit: 30, windowMs: 60_000 });
 
 /**
  * Popular titles on the given providers (`providers=8,337`), for the visitor's region:
- * one mixed list, or with `by=service` one list per provider, with its name and logo.
+ * one mixed list, or with `by=service` the newest releases on each provider, with its name and logo.
  */
 export async function GET(req: NextRequest) {
   if (!limiter(clientKey(req)).ok) {
@@ -26,10 +26,7 @@ export async function GET(req: NextRequest) {
   try {
     const region = await getRegion();
     if (!byService) return NextResponse.json({ results: await popularStreaming(region, ids) });
-    const [rows, providers] = await Promise.all([
-      popularByService(region, ids),
-      getProviders(region),
-    ]);
+    const [rows, providers] = await Promise.all([newByService(region, ids), getProviders(region)]);
     const info = new Map(providers.map((p) => [p.id, p]));
     return NextResponse.json({
       services: rows.flatMap((row) => {

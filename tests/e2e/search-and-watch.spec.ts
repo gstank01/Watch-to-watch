@@ -145,10 +145,8 @@ test.describe("My services", () => {
 
     // Persisted across reloads, and the home page shows what's on it.
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Popular on your services" })).toBeVisible();
-    await expect(page.getByRole("list", { name: "Popular on Disney Plus" })).toContainText(
-      "The Bear",
-    );
+    await expect(page.getByRole("heading", { name: "New on your services" })).toBeVisible();
+    await expect(page.getByRole("list", { name: "New on Disney Plus" })).toContainText("The Bear");
   });
 
   test("the services list can be filtered and the home page prompts first-time visitors", async ({

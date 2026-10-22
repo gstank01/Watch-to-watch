@@ -45,6 +45,8 @@ export default async function BrowsePage(props: PageProps<"/browse">) {
         sortBy: SORTS[state.sort][state.type],
         // Without a minimum, "top rated" is full of titles with a handful of votes.
         minVotes: state.sort === "top" ? 200 : undefined,
+        // "Newest" means already out, not announced for next year.
+        releasedBy: state.sort === "new" ? new Date().toISOString().slice(0, 10) : undefined,
         page: state.page,
       });
       results = { titles: found.results, totalPages: Math.min(found.totalPages, MAX_PAGE) };
