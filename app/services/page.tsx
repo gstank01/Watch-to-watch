@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DataProblem } from "@/components/data-problem";
 import { ServiceCheckup } from "@/components/service-checkup";
 import { ServicesPicker } from "@/components/services-picker";
+import { getSessionUser } from "@/lib/auth/server";
 import { getFreeProviderIds } from "@/lib/data/free-services";
 import { getRegion } from "@/lib/region";
 import { regionInfo } from "@/lib/region-shared";
@@ -14,6 +15,7 @@ export const metadata: Metadata = { title: "My services" };
 export default async function ServicesPage() {
   const region = await getRegion();
   const { name, currency } = regionInfo(region);
+  const user = await getSessionUser();
   let providers: ProviderInfo[] | null = null;
   let problem: string | null = null;
   try {
@@ -39,6 +41,7 @@ export default async function ServicesPage() {
             freeProviderIds={getFreeProviderIds(region)}
             region={region}
             currency={currency}
+            signedIn={!!user}
           />
           <section aria-labelledby="choose-services" className="space-y-4">
             <h2 id="choose-services" className="text-xl font-semibold">

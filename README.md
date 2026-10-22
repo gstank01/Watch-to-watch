@@ -34,7 +34,10 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   you press "Watch on" for one of your services, or tap "I used it today") and what's on your
   Want to watch and Watching lists (`/api/availability` says where those stream). Add what you
   pay to see the monthly total and what pausing could save. It waits two weeks before suggesting
-  a pause. The counted days and prices stay in that browser only (`lib/checkup/`).
+  a pause. Each card also shows the days used this month. The counted days and prices stay in
+  that browser, unless a signed-in visitor ticks "Save my usage to my account": then they're
+  saved to the account (service and day only, never the title) so devices count together, and
+  unticking it deletes that copy (`lib/checkup/`, `/api/usage`).
 - **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
   page, with a tab per list. A title can be a favourite and have one watch status
   (`lib/library/model.ts`).
@@ -67,7 +70,7 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   changes and removals made on other devices show up. Changes are saved locally at once and sent
   in the background; unsent changes wait and are retried (`lib/account/sync.ts`).
 - **Signing out** removes the list from that browser, so the next person doesn't see it (and the
-  check-up's counted days, which aren't synced).
+  check-up's counted days and prices).
 - Privacy: we store the email address, services and list. Sessions don't record IP addresses or
   browsers. Account deletion is a hard delete of everything.
 

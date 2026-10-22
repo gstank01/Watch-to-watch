@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
-import { updateUsage, useUsage } from "@/lib/checkup/store";
+import { updateUsage, useUsage, useUsageSaved } from "@/lib/checkup/store";
+import { setUsageSaved } from "@/lib/checkup/sync";
 import {
+  daysThisMonth,
   forgetUsage,
   localDay,
   parsePriceInput,
@@ -38,7 +40,13 @@ const TONES: Record<VerdictKind, { card: string; text: string }> = {
   free: { card: "border-border bg-surface", text: "" },
 };
 
-type Row = { provider: ProviderInfo; verdict: Verdict; price: number | null; free: boolean };
+type Row = {
+  provider: ProviderInfo;
+  verdict: Verdict;
+  price: number | null;
+  free: boolean;
+  thisMonth: number;
+};
 type Lookup = { key: string; results: Record<string, TitleAvailability> | null };
 
 /**
@@ -50,13 +58,19 @@ export function ServiceCheckup({
   freeProviderIds,
   region,
   currency,
+  signedIn,
 }: {
   providers: ProviderInfo[];
   freeProviderIds: number[];
   region: string;
   currency: string;
+  /** Signed in with accounts on: offer saving usage to the account. */
+  signedIn: boolean;
 }) {
   const services = useMyServices();
+  const saved = useUsageSaved();
+  // While a change is being sent, show the choice just made.
+  const [savingTo, setSavingTo] = useState<boolean | null>(null);
   const library = useLibrary();
   const usage = useUsage();
   const [message, setMessage] = useState("");
@@ -114,6 +128,10 @@ export function ServiceCheckup({
   const checking = titleKeys !== "" && lookup?.key !== lookupKey;
   const free = new Set(freeProviderIds);
   const money = new Intl.NumberFormat("en-GB", { style: "currency", currency });
+  const monthName = new Date(`${today}T12:00:00Z`).toLocaleString("en-GB", {
+    month: "long",
+    timeZone: "UTC",
+  });
 
   const rows: Row[] = mine
     .map((provider) => {
@@ -132,6 +150,7 @@ export function ServiceCheckup({
         verdict: checkService(facts),
         price: usage.prices[priceKey(region, provider.id)] ?? null,
         free: facts.free,
+        thisMonth: daysThisMonth(usage, provider.id, today),
       };
     })
     .sort((a, b) => VERDICT_ORDER.indexOf(a.verdict.kind) - VERDICT_ORDER.indexOf(b.verdict.kind));
@@ -171,6 +190,30 @@ export function ServiceCheckup({
     setMessage(on ? "Counting is on." : "Counting is off, and the counted days are forgotten.");
   }
 
+  async function toggleSaved(on: boolean) {
+    if (
+      !on &&
+      !window.confirm(
+        "Stop saving usage to your account? The copy in your account is deleted. This browser keeps its own.",
+      )
+    ) {
+      return;
+    }
+    setSavingTo(on);
+    try {
+      await setUsageSaved(on);
+      setMessage(
+        on
+          ? "Your usage is now saved to your account."
+          : "Stopped saving. The copy in your account is deleted.",
+      );
+    } catch {
+      setMessage("Couldn't change this just now. Please try again.");
+    } finally {
+      setSavingTo(null);
+    }
+  }
+
   function forget() {
     if (!window.confirm("Forget the days we've counted? The check-up starts again from today.")) {
       return;
@@ -188,9 +231,31 @@ export function ServiceCheckup({
         <p className="text-muted max-w-prose text-sm">
           A day counts as used when you press &ldquo;Watch on&rdquo; for one of your services here,
           or tap &ldquo;I used it today&rdquo;. We also look at what&apos;s on your Want to watch
-          and Watching lists. The counting happens in this browser only: it&apos;s never sent to us.
+          and Watching lists.{" "}
+          {saved && signedIn
+            ? "Your counted days and prices are also saved to your account."
+            : "The counting happens in this browser only: it's never sent to us."}
         </p>
       </div>
+
+      {signedIn && usage.counting && (
+        <div className="border-border bg-surface space-y-1 rounded-xl border p-4">
+          <label className="flex items-center gap-3 font-medium">
+            <input
+              type="checkbox"
+              checked={savingTo ?? !!saved}
+              disabled={saved === null || savingTo !== null}
+              onChange={(e) => void toggleSaved(e.target.checked)}
+              className="size-5 accent-[var(--accent)]"
+            />
+            Save my usage to my account
+          </label>
+          <p className="text-muted pl-8 text-sm">
+            So your phone and computer count together. We save only which service you used and on
+            which day, never what you watched. Turning it off deletes the copy in your account.
+          </p>
+        </div>
+      )}
 
       {!usage.counting ? (
         <div className="border-border bg-surface flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
@@ -222,6 +287,7 @@ export function ServiceCheckup({
                 usedToday={usedOn(usage, row.provider.id, today)}
                 currency={currency}
                 money={money}
+                monthName={monthName}
                 onToggleUsed={() => toggleUsedToday(row.provider)}
                 onPrice={(price) => savePrice(row.provider, price)}
               />
@@ -292,6 +358,7 @@ function ServiceCard({
   usedToday,
   currency,
   money,
+  monthName,
   onToggleUsed,
   onPrice,
 }: {
@@ -299,6 +366,7 @@ function ServiceCard({
   usedToday: boolean;
   currency: string;
   money: Intl.NumberFormat;
+  monthName: string;
   onToggleUsed: () => void;
   onPrice: (price: number | null) => void;
 }) {
@@ -319,6 +387,13 @@ function ServiceCard({
           <p className={`text-sm font-semibold ${tone.text}`} data-testid="verdict">
             {verdict.headline}
           </p>
+          {!row.free && (
+            <p className="text-muted text-sm" data-testid="this-month">
+              {row.thisMonth === 0
+                ? `Not used in ${monthName} so far`
+                : `Used on ${row.thisMonth} ${row.thisMonth === 1 ? "day" : "days"} in ${monthName} so far`}
+            </p>
+          )}
         </div>
       </div>
       {(verdict.reasons.length > 0 || (price !== null && isFlagged(verdict.kind))) && (

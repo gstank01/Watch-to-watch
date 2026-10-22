@@ -124,3 +124,106 @@ export async function setServices(userId: string, providerIds: number[]) {
 export async function deleteAccount(userId: string) {
   await db().user.delete({ where: { id: userId } });
 }
+
+// ---- Service check-up usage, saved only when the user turns it on ----
+
+/** Days kept on the account: the check-up's 90, plus slack for time zones. */
+const USAGE_KEEP_DAYS = 92;
+
+const toDate = (day: string) => new Date(`${day}T00:00:00Z`);
+const fromDate = (d: Date) => d.toISOString().slice(0, 10);
+
+export class UsageSyncOffError extends Error {}
+
+export type AccountUsage =
+  | { enabled: false }
+  | {
+      enabled: true;
+      since: string | null;
+      days: Record<string, string[]>;
+      prices: Record<string, number>;
+    };
+
+export async function getUsage(userId: string, now = new Date()): Promise<AccountUsage> {
+  const sync = await db().usageSync.findUnique({ where: { userId } });
+  if (!sync) return { enabled: false };
+  const oldest = new Date(now.getTime() - USAGE_KEEP_DAYS * 86_400_000);
+  const rows = await db().serviceUseDay.findMany({
+    where: { userId, day: { gte: oldest } },
+    orderBy: { day: "asc" },
+  });
+  const days: Record<string, string[]> = {};
+  for (const r of rows) (days[String(r.providerId)] ??= []).push(fromDate(r.day));
+  return {
+    enabled: true,
+    since: sync.since ? fromDate(sync.since) : null,
+    days,
+    prices: (sync.prices ?? {}) as Record<string, number>,
+  };
+}
+
+export async function enableUsageSync(userId: string, since: string | null) {
+  await db().usageSync.upsert({
+    where: { userId },
+    create: { userId, since: since ? toDate(since) : null },
+    update: {},
+  });
+}
+
+/** Turning it off deletes everything saved: the setting, the prices and every day. */
+export async function disableUsageSync(userId: string) {
+  await db().$transaction([
+    db().serviceUseDay.deleteMany({ where: { userId } }),
+    db().usageSync.deleteMany({ where: { userId } }),
+  ]);
+}
+
+/**
+ * Adds and removes days, and replaces prices and the start day when sent.
+ * Days outside the kept window (or more than a day ahead) are ignored.
+ */
+export async function applyUsageChanges(
+  userId: string,
+  changes: {
+    add: { providerId: number; day: string }[];
+    remove: { providerId: number; day: string }[];
+    prices?: Record<string, number>;
+    since?: string | null;
+  },
+  now = new Date(),
+) {
+  const oldest = new Date(now.getTime() - USAGE_KEEP_DAYS * 86_400_000);
+  const latest = new Date(now.getTime() + 2 * 86_400_000);
+  const inWindow = (day: string) => toDate(day) >= oldest && toDate(day) <= latest;
+  await db().$transaction(async (tx) => {
+    const sync = await tx.usageSync.findUnique({ where: { userId } });
+    if (!sync) throw new UsageSyncOffError("Saving usage is off for this account");
+    const add = changes.add.filter((r) => inWindow(r.day));
+    if (add.length) {
+      await tx.serviceUseDay.createMany({
+        data: add.map((r) => ({ userId, providerId: r.providerId, day: toDate(r.day) })),
+        skipDuplicates: true,
+      });
+    }
+    if (changes.remove.length) {
+      await tx.serviceUseDay.deleteMany({
+        where: {
+          userId,
+          OR: changes.remove.map((r) => ({ providerId: r.providerId, day: toDate(r.day) })),
+        },
+      });
+    }
+    await tx.serviceUseDay.deleteMany({ where: { userId, day: { lt: oldest } } });
+    if (changes.prices !== undefined || changes.since !== undefined) {
+      await tx.usageSync.update({
+        where: { userId },
+        data: {
+          ...(changes.prices !== undefined && { prices: changes.prices }),
+          ...(changes.since !== undefined && {
+            since: changes.since ? toDate(changes.since) : null,
+          }),
+        },
+      });
+    }
+  });
+}

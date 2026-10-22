@@ -158,3 +158,10 @@ export function parsePriceInput(text: string): number | null | undefined {
   const price = Number(cleaned);
   return isPrice(price) ? price : undefined;
 }
+
+/** Days `providerId` was used in the calendar month of `today`, up to and including it. */
+export function daysThisMonth(usage: Usage, providerId: number, today: string): number {
+  const month = today.slice(0, 7);
+  return (usage.days[String(providerId)] ?? []).filter((d) => d.startsWith(month) && d <= today)
+    .length;
+}

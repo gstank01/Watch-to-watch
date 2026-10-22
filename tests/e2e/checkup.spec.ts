@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { accountsEnabled, newEmail, signIn } from "./accounts";
 import { seedCheckup } from "./seed";
 
 const card = (page: Page, name: string) =>
@@ -22,6 +23,9 @@ test.describe("Service check-up", () => {
     await expect(disney).toContainText("We've been counting for 1 day. Check back in 13 days.");
     const usedToday = disney.getByRole("button", { name: "I used it today – Disney Plus" });
     await expect(usedToday).toHaveAttribute("aria-pressed", "false");
+    await expect(disney.getByTestId("this-month")).toContainText("Not used in");
+    // Saving to an account is only offered when signed in.
+    await expect(page.getByLabel("Save my usage to my account")).toHaveCount(0);
 
     await page.goto("/tv/136315");
     const popup = page.waitForEvent("popup");
@@ -117,5 +121,65 @@ test.describe("Service check-up", () => {
     await expect(
       netflix.getByRole("button", { name: "I used it today – Netflix" }),
     ).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+test.describe("Saving usage to the account", () => {
+  test.skip(!accountsEnabled, "Set E2E_DATABASE_URL to run the accounts tests");
+
+  test("is opt-in, follows you to another device, and turning it off deletes it", async ({
+    page,
+    browser,
+  }) => {
+    const email = newEmail();
+    const usage = async (p: Page) => (await p.request.get("/api/usage")).json();
+
+    await page.goto("/services");
+    await page.getByRole("checkbox", { name: "Disney Plus" }).check();
+    await signIn(page, email);
+    await page.goto("/services");
+    const save = page.getByLabel("Save my usage to my account");
+    await expect(save).not.toBeChecked();
+    expect(await usage(page)).toEqual({ enabled: false });
+
+    await save.check();
+    await expect(page.getByText("Your usage is now saved to your account.")).toBeAttached();
+    await card(page, "Disney Plus")
+      .getByRole("button", { name: "I used it today – Disney Plus" })
+      .click();
+    const price = page.getByLabel("What you pay a month for Disney Plus");
+    await price.fill("7.99");
+    await price.press("Tab");
+    await expect
+      .poll(async () => {
+        const body = await usage(page);
+        return [body.enabled, Object.keys(body.days), body.prices];
+      })
+      .toEqual([true, ["337"], { "GB:337": 7.99 }]);
+
+    // A second device with nothing saved picks it all up.
+    const other = await browser.newContext();
+    const page2 = await other.newPage();
+    await signIn(page2, email);
+    await page2.goto("/services");
+    const disney2 = card(page2, "Disney Plus");
+    await expect(page2.getByLabel("Save my usage to my account")).toBeChecked();
+    await expect(
+      disney2.getByRole("button", { name: "I used it today – Disney Plus" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(disney2.getByTestId("this-month")).toContainText("Used on 1 day in");
+    await page2.reload();
+    await expect(page2.getByLabel("What you pay a month for Disney Plus")).toHaveValue("7.99");
+
+    // Turning it off deletes the account's copy; this browser keeps its own.
+    page2.on("dialog", (dialog) => void dialog.accept());
+    await page2.getByLabel("Save my usage to my account").uncheck();
+    await expect.poll(async () => usage(page2)).toEqual({ enabled: false });
+    await page.reload();
+    await expect(page.getByLabel("Save my usage to my account")).not.toBeChecked();
+    await expect(
+      card(page, "Disney Plus").getByRole("button", { name: "I used it today – Disney Plus" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await other.close();
   });
 });

@@ -70,8 +70,12 @@ export default function AboutPage() {
           <li>
             The service check-up counts the days you press &ldquo;Watch on&rdquo; for one of your
             services, or tap &ldquo;I used it today&rdquo;, plus any prices you enter. That stays in
-            your browser, even when you&apos;re signed in: we never receive it. You can forget it or
-            turn counting off on the My services page, and signing out clears it.
+            your browser unless you&apos;re signed in and turn on &ldquo;Save my usage to my
+            account&rdquo;. Then we store which service you used and on which day (never what you
+            watched) and your prices, so your devices count together. We don&apos;t use it for
+            anything else or share it. Turning the setting off deletes it at once, and so does
+            deleting your account. You can also forget it or turn counting off on the My services
+            page, and signing out clears it from that browser.
           </li>
           <li>
             Your star ratings are private. We only ever show a title&apos;s average from signed-in

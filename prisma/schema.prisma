@@ -23,6 +23,8 @@ model User {
   accounts      Account[]
   services      UserService[]
   watchlist     WatchlistItem[]
+  usageSync     UsageSync?
+  usageDays     ServiceUseDay[]
 
   @@map("user")
 }
@@ -108,6 +110,32 @@ model WatchlistItem {
   // For a title's community rating across users.
   @@index([mediaType, tmdbId])
   @@map("watchlist_item")
+}
+
+/// The user chose to save their service check-up usage to their account (opt-in).
+/// Deleting this row (turning it off) deletes their usage days too.
+model UsageSync {
+  userId    String    @id
+  // The day counting began, as the user's browser saw it.
+  since     DateTime? @db.Date
+  // "REGION:providerId" -> monthly price, validated by lib/account/schemas.ts.
+  prices    Json      @default("{}")
+  enabledAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("usage_sync")
+}
+
+/// A day on which the user used one of their services through the app.
+/// Only the service and the day: never which title.
+model ServiceUseDay {
+  userId     String
+  providerId Int
+  day        DateTime @db.Date
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, providerId, day])
+  @@map("service_use_day")
 }
 
 enum MediaType {

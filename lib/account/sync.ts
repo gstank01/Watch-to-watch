@@ -159,7 +159,7 @@ export const hasUnsavedChanges = () => hasPending(pendingStore.read());
 export function clearLocalAccountData() {
   replaceLibrary({});
   replaceServices([]);
-  // Not account data, but it says which services were used here: don't leave it behind.
+  // Says which services were used here (and may be saved to the account): don't leave it behind.
   clearUsage();
   pendingStore.write(EMPTY_PENDING);
   syncedUser.write(null);
