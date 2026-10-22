@@ -2,27 +2,32 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { libraryKey } from "@/lib/library/model";
+import { useLibrary } from "@/lib/library/store";
 import { useMyServices } from "@/lib/services/store";
 import type { TitleSummary } from "@/lib/tmdb/types";
-import { TitleGrid } from "./title-grid";
+import { ProviderLogo } from "./provider-logo";
+import { TitleRow } from "./title-grid";
 
-/** "Pick your services" prompt, or popular titles on the visitor's services. */
+type ServiceRow = { id: number; name: string; logoPath: string | null; titles: TitleSummary[] };
+
+/** "Pick your services" prompt, or a "Popular on <service>" row for each of the visitor's services. */
 export function HomePersonal() {
   const services = useMyServices();
-  const key =
-    services
-      ?.slice()
-      .sort((a, b) => a - b)
-      .join(",") ?? "";
-  const [state, setState] = useState<{ key: string; titles: TitleSummary[] } | null>(null);
+  const library = useLibrary();
+  // In the order the visitor ticked them.
+  const key = services?.join(",") ?? "";
+  const [state, setState] = useState<{ key: string; rows: ServiceRow[] | null } | null>(null);
 
   useEffect(() => {
     if (!key) return;
     const controller = new AbortController();
-    fetch(`/api/popular?providers=${key}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : { results: [] }))
-      .then((body: { results: TitleSummary[] }) => setState({ key, titles: body.results }))
-      .catch(() => {});
+    fetch(`/api/popular?providers=${key}&by=service`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((body: { services: ServiceRow[] }) => setState({ key, rows: body.services }))
+      .catch(() => {
+        if (!controller.signal.aborted) setState({ key, rows: null });
+      });
     return () => controller.abort();
   }, [key]);
 
@@ -34,8 +39,8 @@ export function HomePersonal() {
         <div>
           <h2 className="text-lg font-semibold">Which services do you already have?</h2>
           <p className="text-muted">
-            Tick them once and we&apos;ll show what&apos;s on them first. Saved in this browser
-            only.
+            Tick them once and we&apos;ll show what&apos;s popular on each of them, and put them
+            first everywhere.
           </p>
         </div>
         <Link
@@ -48,9 +53,13 @@ export function HomePersonal() {
     );
   }
 
-  const titles = state?.key === key ? state.titles : null;
+  const loaded = state?.key === key ? state : null;
+  // Leave out what the visitor has already watched.
+  const unwatched = (titles: TitleSummary[]) =>
+    titles.filter((t) => library?.[libraryKey(t)]?.status !== "watched");
+
   return (
-    <section aria-labelledby="on-my-services" className="space-y-4">
+    <section aria-labelledby="on-my-services" className="space-y-6">
       <div className="flex items-baseline justify-between">
         <h2 id="on-my-services" className="text-xl font-semibold">
           Popular on your services
@@ -59,13 +68,35 @@ export function HomePersonal() {
           Edit services
         </Link>
       </div>
-      {titles === null ? (
+      {loaded === null ? (
         <p className="text-muted">Loading…</p>
-      ) : titles.length ? (
-        <TitleGrid titles={titles} label="Popular on your services" />
+      ) : loaded.rows === null ? (
+        <p className="text-muted">We couldn&apos;t load what&apos;s popular right now.</p>
       ) : (
-        <p className="text-muted">Nothing to show for your services right now.</p>
+        loaded.rows.map((row) => {
+          const titles = unwatched(row.titles);
+          return (
+            <section key={row.id} aria-labelledby={`popular-on-${row.id}`} className="space-y-3">
+              <h3
+                id={`popular-on-${row.id}`}
+                className="flex items-center gap-2 text-lg font-semibold"
+              >
+                <ProviderLogo path={row.logoPath} name={row.name} size={28} />
+                Popular on {row.name}
+              </h3>
+              {titles.length ? (
+                <TitleRow titles={titles} label={`Popular on ${row.name}`} />
+              ) : (
+                <p className="text-muted text-sm">Nothing new to show on {row.name} right now.</p>
+              )}
+            </section>
+          );
+        })
       )}
+      <p className="text-muted text-xs">
+        Ranked by popularity on TMDB in recent days: a guide to what people are watching, not the
+        services&apos; own viewing figures.
+      </p>
     </section>
   );
 }

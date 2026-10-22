@@ -13,13 +13,13 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
 
 ## Status
 
-| Milestone                                   | Status                                          |
-| ------------------------------------------- | ----------------------------------------------- |
-| M1: Search and where to watch (no accounts) | ✅ Done                                         |
-| M2: Browse                                  | Not started                                     |
-| M3: Free trials (no accounts)               | Not started                                     |
-| M4: Accounts, watchlist, trial tracker      | Partly: accounts and My list ✅, trials to come |
-| M5: Smart suggestions and alerts            | Not started                                     |
+| Milestone                                   | Status                                                          |
+| ------------------------------------------- | --------------------------------------------------------------- |
+| M1: Search and where to watch (no accounts) | ✅ Done                                                         |
+| M2: Browse                                  | Partly: categories, filters, sort ✅; moods and runtime to come |
+| M3: Free trials (no accounts)               | Not started                                                     |
+| M4: Accounts, watchlist, trial tracker      | Partly: accounts and My list ✅, trials to come                 |
+| M5: Smart suggestions and alerts            | Not started                                                     |
 
 ### What's built
 
@@ -38,6 +38,11 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   that browser, unless a signed-in visitor ticks "Save my usage to my account": then they're
   saved to the account (service and day only, never the title) so devices count together, and
   unticking it deletes that copy (`lib/checkup/`, `/api/usage`).
+- **Browse** (`/browse`, in the header): pick films or series, a category (TMDB's genres:
+  Action, Comedy, Thriller…), where it streams (everything, free, or on my services) and a sort
+  (popular, top rated, newest). Filters live in the URL (`lib/browse.ts`).
+- **Home page:** a "Popular on <service>" row for each of your services, leaving out what you've
+  marked Watched; ranked by TMDB popularity, not the services' own viewing figures.
 - **My usage** (`/usage`, linked in the footer): days each service was used in each of the last
   three months, the monthly price, and the cost per day actually watched ("£10.99 ÷ 5 days =
   £2.20"), with totals for what you pay and what went unused this month.

@@ -9,6 +9,7 @@ const PAGES = [
   "/movie/116149",
   "/services",
   "/usage",
+  "/browse?genre=35",
   "/my-list",
   "/sign-in",
   "/about",

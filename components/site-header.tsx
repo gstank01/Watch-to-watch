@@ -22,6 +22,9 @@ export async function SiteHeader() {
           <Link href="/search" className="hover:underline">
             Search
           </Link>
+          <Link href="/browse" className="hover:underline">
+            Browse
+          </Link>
           <Link href="/my-list" className="hover:underline">
             My list
           </Link>

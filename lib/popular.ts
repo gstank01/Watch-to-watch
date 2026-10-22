@@ -18,3 +18,13 @@ export async function popularStreaming(region: string, providerIds?: number[], l
   }
   return out;
 }
+
+/** Most services shown as their own row on the home page. */
+export const MAX_SERVICE_ROWS = 8;
+
+/** One "Popular on <service>" row per provider, in the order given. */
+export async function popularByService(region: string, providerIds: number[], perService = 10) {
+  const ids = providerIds.slice(0, MAX_SERVICE_ROWS);
+  const rows = await Promise.all(ids.map((id) => popularStreaming(region, [id], perService)));
+  return ids.map((providerId, i) => ({ providerId, titles: rows[i] }));
+}

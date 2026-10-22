@@ -43,3 +43,17 @@ export function TitleGrid({ titles, label }: { titles: TitleSummary[]; label?: s
     </ul>
   );
 }
+
+/** One line of titles that scrolls sideways. */
+export function TitleRow({ titles, label }: { titles: TitleSummary[]; label?: string }) {
+  return (
+    <ul
+      aria-label={label}
+      className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 [&>li]:w-36 [&>li]:shrink-0 [&>li]:snap-start sm:[&>li]:w-40"
+    >
+      {titles.map((t) => (
+        <TitleCard key={`${t.mediaType}-${t.id}`} title={t} />
+      ))}
+    </ul>
+  );
+}

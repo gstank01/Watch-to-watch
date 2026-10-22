@@ -116,6 +116,8 @@ export type DiscoverOptions = {
   monetization?: string[];
   genreIds?: number[];
   maxRuntime?: number;
+  /** Only titles with at least this many votes (keeps "top rated" meaningful). */
+  minVotes?: number;
   sortBy?: string;
   page?: number;
 };
@@ -130,6 +132,7 @@ export async function discover(mediaType: MediaType, opts: DiscoverOptions) {
       : undefined,
     with_genres: opts.genreIds?.length ? opts.genreIds.join("|") : undefined,
     "with_runtime.lte": opts.maxRuntime,
+    "vote_count.gte": opts.minVotes,
     sort_by: opts.sortBy ?? "popularity.desc",
     page: opts.page ?? 1,
     include_adult: false,

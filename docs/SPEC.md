@@ -336,6 +336,8 @@ Build in order. Don't start the next milestone until the current one's acceptanc
 **Accept when:** searching "The Bear" shows correct GB providers grouped as in Flow A; selecting a service moves it to "On your services"; e2e tests pass with TMDB mocked.
 
 ### M2: Browse
+
+> **Progress (2026-10-22):** `/browse` with films/series, TMDB genre as the category, where it streams (everything / free / my services, the visitor's services carried in the URL), sort (popular / top rated with 200+ votes / newest), URL-synced filters and pages. Home page rows "Popular on <service>" per selected service (TMDB popularity; Watched titles hidden). Still to do: moods (`data/moods.ts`), max runtime, provider logos on results.
 - `/browse` with mood, media type, runtime, "my services only", "free only", sort; URL-synced filters; infinite scroll or pagination.
 
 **Accept when:** "Make me laugh + under 90 min + my services only" returns only matching titles available on the selected services.

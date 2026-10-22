@@ -146,7 +146,7 @@ test.describe("My services", () => {
     // Persisted across reloads, and the home page shows what's on it.
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Popular on your services" })).toBeVisible();
-    await expect(page.getByRole("list", { name: "Popular on your services" })).toContainText(
+    await expect(page.getByRole("list", { name: "Popular on Disney Plus" })).toContainText(
       "The Bear",
     );
   });

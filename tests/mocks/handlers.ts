@@ -61,7 +61,13 @@ function discoverResolver(type: "movie" | "tv"): HttpResponseResolver {
   return ({ request }) => {
     const url = new URL(request.url);
     const providers = url.searchParams.get("with_watch_providers");
-    let results: { id: number }[] = type === "movie" ? DISCOVER_MOVIES : DISCOVER_TV;
+    const genres = url.searchParams.get("with_genres");
+    let results: { id: number; genre_ids: number[] }[] =
+      type === "movie" ? DISCOVER_MOVIES : DISCOVER_TV;
+    if (genres) {
+      const wanted = genres.split("|").map(Number);
+      results = results.filter((r) => r.genre_ids.some((id) => wanted.includes(id)));
+    }
     if (providers) {
       const wanted = providers.split("|").map(Number);
       results = results.filter((r) =>
@@ -73,6 +79,15 @@ function discoverResolver(type: "movie" | "tv"): HttpResponseResolver {
 }
 
 export const handlers = [
+  // Before "*/movie/:id", which would otherwise match "/genre/movie/list".
+  http.get(
+    "*/genre/movie/list",
+    authed(() => HttpResponse.json({ genres: GENRES.movie })),
+  ),
+  http.get(
+    "*/genre/tv/list",
+    authed(() => HttpResponse.json({ genres: GENRES.tv })),
+  ),
   http.get(
     "*/search/multi",
     authed(({ request }) => {
@@ -121,14 +136,6 @@ export const handlers = [
   http.get(
     "*/watch/providers/tv",
     authed(() => HttpResponse.json({ results: PROVIDER_LIST.tv })),
-  ),
-  http.get(
-    "*/genre/movie/list",
-    authed(() => HttpResponse.json({ genres: GENRES.movie })),
-  ),
-  http.get(
-    "*/genre/tv/list",
-    authed(() => HttpResponse.json({ genres: GENRES.tv })),
   ),
   http.get("*/discover/movie", authed(discoverResolver("movie"))),
   http.get("*/discover/tv", authed(discoverResolver("tv"))),
