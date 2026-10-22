@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
 import { updateUsage, useUsage, useUsageSaved } from "@/lib/checkup/store";
 import { setUsageSaved } from "@/lib/checkup/sync";
@@ -308,6 +309,12 @@ export function ServiceCheckup({
             >
               Turn counting off
             </button>
+            <Link
+              href="/usage"
+              className="border-border hover:bg-surface-2 rounded-lg border px-3 py-1.5"
+            >
+              See my usage by month
+            </Link>
           </div>
         </>
       )}

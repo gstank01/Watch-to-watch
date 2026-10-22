@@ -183,3 +183,30 @@ test.describe("Saving usage to the account", () => {
     await other.close();
   });
 });
+
+test.describe("My usage", () => {
+  test("shows each service month by month, with what each day cost", async ({ page }) => {
+    await seedCheckup(page, { "GB:8": 10, "GB:337": 7.99 });
+    await page.goto("/");
+    await page
+      .getByRole("navigation", { name: "Footer" })
+      .getByRole("link", { name: "My usage" })
+      .click();
+    await expect(page).toHaveURL(/\/usage$/);
+    await expect(page.getByRole("heading", { name: "My usage" })).toBeVisible();
+
+    // Netflix was used on 5 of the last 30 days; Disney Plus not at all.
+    const summary = page.getByTestId("usage-summary");
+    await expect(summary).toContainText("You pay a month£17.99");
+    const netflix = page.getByRole("row", { name: /Netflix/ });
+    await expect(netflix).toContainText("£2.00 (£10.00 ÷ 5 days)");
+    await expect(page.getByRole("row", { name: /Disney Plus/ })).toContainText("Not used");
+    await expect(page.getByRole("row", { name: /BBC iPlayer/ })).toContainText("Free");
+    await expect(page.getByText("This usage is kept in this browser only.")).toBeVisible();
+  });
+
+  test("points to My services when no services are ticked", async ({ page }) => {
+    await page.goto("/usage");
+    await expect(page.getByText(/Tick the services you have on/)).toBeVisible();
+  });
+});

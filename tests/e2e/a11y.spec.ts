@@ -8,6 +8,7 @@ const PAGES = [
   "/tv/136315",
   "/movie/116149",
   "/services",
+  "/usage",
   "/my-list",
   "/sign-in",
   "/about",

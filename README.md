@@ -38,6 +38,9 @@ The spec lives in [`docs/SPEC.md`](docs/SPEC.md).
   that browser, unless a signed-in visitor ticks "Save my usage to my account": then they're
   saved to the account (service and day only, never the title) so devices count together, and
   unticking it deletes that copy (`lib/checkup/`, `/api/usage`).
+- **My usage** (`/usage`, linked in the footer): days each service was used in each of the last
+  three months, the monthly price, and the cost per day actually watched ("£10.99 ÷ 5 days =
+  £2.20"), with totals for what you pay and what went unused this month.
 - **My list** (`/my-list`): ♥ Favourite plus Want to watch / Watching / Watched on every title
   page, with a tab per list. A title can be a favourite and have one watch status
   (`lib/library/model.ts`).

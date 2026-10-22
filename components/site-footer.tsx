@@ -15,6 +15,15 @@ export function SiteFooter() {
           </a>
           . This product uses the TMDB API but is not endorsed or certified by TMDB.
         </p>
+        <nav aria-label="Footer">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            <li>
+              <Link className="underline" href="/usage">
+                My usage
+              </Link>
+            </li>
+          </ul>
+        </nav>
         <p>
           WhatToWatch is free and non-commercial: no ads, no affiliate links, no tracking.{" "}
           <Link className="underline" href="/about">

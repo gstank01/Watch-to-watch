@@ -165,3 +165,38 @@ export function daysThisMonth(usage: Usage, providerId: number, today: string): 
   return (usage.days[String(providerId)] ?? []).filter((d) => d.startsWith(month) && d <= today)
     .length;
 }
+
+/** "2026-10" → the month before, "2026-09". */
+const previousMonth = (month: string) => addDays(`${month}-01`, -1).slice(0, 7);
+
+export type MonthCount = {
+  /** "YYYY-MM". */
+  month: string;
+  days: number;
+  /** Counting began during this month (or it's the current month), so it isn't a full month. */
+  partial: boolean;
+};
+
+/**
+ * Days `providerId` was used in each of the last `months` calendar months, newest
+ * first. Months before counting began are left out.
+ */
+export function monthlyUse(
+  usage: Usage,
+  providerId: number,
+  today: string,
+  months = 3,
+): MonthCount[] {
+  const list = usage.days[String(providerId)] ?? [];
+  const start = usage.since?.slice(0, 7) ?? today.slice(0, 7);
+  const result: MonthCount[] = [];
+  let month = today.slice(0, 7);
+  for (let i = 0; i < months && month >= start; i++, month = previousMonth(month)) {
+    result.push({
+      month,
+      days: list.filter((d) => d.startsWith(month) && d <= today).length,
+      partial: i === 0 || month === start,
+    });
+  }
+  return result;
+}

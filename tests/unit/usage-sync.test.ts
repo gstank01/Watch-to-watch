@@ -11,6 +11,7 @@ import {
   addDays,
   daysThisMonth,
   EMPTY_USAGE,
+  monthlyUse,
   recordUse,
   setPrice,
   type Usage,
@@ -111,5 +112,27 @@ describe("saving usage to the account", () => {
     ]) {
       expect(usageChangesSchema.safeParse(bad).success).toBe(false);
     }
+  });
+});
+
+describe("usage by month", () => {
+  it("counts each calendar month, newest first, from when counting began", () => {
+    const u = usage({
+      since: "2026-08-20",
+      days: { "8": ["2026-08-25", "2026-09-01", "2026-09-30", "2026-10-02", TODAY] },
+    });
+    expect(monthlyUse(u, 8, TODAY)).toEqual([
+      { month: "2026-10", days: 2, partial: true },
+      { month: "2026-09", days: 2, partial: false },
+      { month: "2026-08", days: 1, partial: true },
+    ]);
+    // Months before counting began aren't shown as zero.
+    expect(monthlyUse({ ...u, since: "2026-10-01" }, 8, TODAY)).toEqual([
+      { month: "2026-10", days: 2, partial: true },
+    ]);
+    expect(monthlyUse(u, 337, "2027-01-05", 2)).toEqual([
+      { month: "2027-01", days: 0, partial: true },
+      { month: "2026-12", days: 0, partial: false },
+    ]);
   });
 });

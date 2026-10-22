@@ -18,7 +18,7 @@ const entry = (id: number, mediaType: "movie" | "tv", title: string, status: str
  * The Bear (only on Disney Plus) and Paddington (Netflix, and free on iPlayer)
  * on Want to watch; Netflix used on 5 recent days, Disney Plus not at all.
  */
-export async function seedCheckup(page: Page) {
+export async function seedCheckup(page: Page, prices: Record<string, number> = {}) {
   const today = localDay();
   const data = {
     "wtw:services:v1": [8, 337, 38],
@@ -30,7 +30,7 @@ export async function seedCheckup(page: Page) {
       counting: true,
       since: addDays(today, -39),
       days: { "8": [1, 3, 6, 10, 20].map((n) => addDays(today, -n)).sort() },
-      prices: {},
+      prices,
     },
   };
   // Any page will do: storage belongs to the site, not the page.
